@@ -189,12 +189,67 @@ class PRW_Data_Opvrager:
             self.first_start = False
             self.dlg = PRW_Data_OpvragerDialog()
 
+        settings = QSettings()
+        allkeys = settings.allKeys()
+        databases = [k for k in allkeys if 'database' in k]
+        databaseNames = [settings.value(k) for k in databases]
+        self.dlg.DatabaseComboBox.clear()
+        self.dlg.DatabaseComboBox.addItems(databaseNames) 
+
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            pass
+            selected_layer = self.dlg.cmb_layers.currentLayer()
+            dateMax = self.dlg.DateMax.date()
+            dateMin = self.dlg.DateMin.date()
+            fileName = self.dlg.FileName.text()
+            outputLocation = self.dlg.OutputLocation.filePath()
+
+            settings = QSettings()
+            allkeys = settings.allKeys()
+            allvalues = [settings.value(k) for k in allkeys]
+            allsettings = dict(zip(allkeys, allvalues))
+            database = self.dlg.cmb_databases.currentText()
+            for key, val in allsettings.items():
+                if 'database' in key:
+                    if val == database:
+                        databasekey = key
+            databasekey = databasekey.rstrip('database')
+            selected_databasekeys = [k for k in allkeys if databasekey in k]
+            host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
+            port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
+            username = settings.value([k for k in selected_databasekeys if 'username' in k][0])
+            password = settings.value([k for k in selected_databasekeys if 'password' in k][0])
+
+            success, username, password, message = self.get_credentials(host, port, database, username=username, password=password)
+            while success == 'false':
+                success, username, password, message = self.get_credentials(host, port, database, message=message)
+            if success == 'exit':
+                pass
+            elif suc == 'true':
+                print('success')
+                ## ask database stuff
+    
+    def get_credentials(self, host, port, database, username=None, password=None, message=None):
+        uri = QgsDataSourceUri()
+
+        uri.setConnection(host, port, database, username, password)
+        connInfo = uri.connectionInfo()
+
+        if username or password not None:
+            # Check connection
+
+        (suc, user, passwd) = QgsCredentials.instance().get(connInfo, message=message)
+        errorMessage = None
+        if suc:
+            # check if connection works otherwise return 'false'
+            try:
+                
+                return 'true', user, passwd, errorMessage
+            except:
+                return 'false', user, passwd, errorMessage
+        else:
+            return 'exit', user, passwd, errorMessage
