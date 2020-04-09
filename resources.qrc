@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/PRW" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
