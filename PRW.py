@@ -415,13 +415,13 @@ class PRW_Data_Opvrager:
                         values = chunk
                         bindValues = [':' + str(i+1) for i in range(len(values))]
                         bindDate = [':dateMin', ':dateMax']
-                        bindAll = bindValues + bindDate
+                        bindAll = bindDate + bindValues
                         values = values + [self.dateMin, self.dateMax]
                         bindDict = dict(zip(bindAll, values))
                         query = 'SELECT * FROM prw_meetgegevens ' + \
                             'WHERE datum_meeting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
-                            'AND pbs_id IN ({})'.format(','.join(bindValues))
+                            'AND pbs_id IN ({});'.format(','.join(bindValues))
                         print(query)
                         print(bindDict)
                         fetched, description = self.fetch(query, bindDict)
