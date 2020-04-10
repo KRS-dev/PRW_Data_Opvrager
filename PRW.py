@@ -256,7 +256,7 @@ class PRW_Data_Opvrager:
                 try:
                     self.check_connection()
                     self.get_data()
-                except cx_Oracle.DatabaseError as e:
+                except cora.DatabaseError as e:
                     errorObj, = e.args
                     erroMessage = errorObj.message
                     while success == 'false':
@@ -367,7 +367,7 @@ class PRW_Data_Opvrager:
             print(str(len(features)) + ' peilbuizen geselecteerd.')
             for f in features:
                 try:
-                    pbs_ids.append(f.attribute('PBS_ID'))
+                    pbs_ids.append(f.attribute('ID'))
                 except KeyError:
                     raise KeyError(
                         'This layer does not contain an attribute called pbs_id')
