@@ -347,8 +347,11 @@ class PRW_Data_Opvrager:
                 ) as dbcon:
             print('fetching')
             cur = dbcon.cursor()
+            print('cursor')
             cur.execute(query, data)
+            print('execute')
             fetched = cur.fetchall()
+            print('fetchall')
             description = cur.description
             print('fetching done')
             return fetched, description
