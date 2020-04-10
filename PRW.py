@@ -275,7 +275,7 @@ class PRW_Data_Opvrager:
         pbs_ids = self.get_pbs_ids(self.selected_layer)
         df_pbs = self.get_peilbuizen(pbs_ids)
         #df_projecten = self.get_projecten(pbs_ids)
-        #df_meetgegevens = self.get_meetgegevens(pbs_ids)
+        df_meetgegevens = self.get_meetgegevens(pbs_ids)
         print(df_meetgegevens)
         # Check if the directory still has to be made.
         if os.path.isdir(self.outputLocation) == False:
@@ -372,7 +372,7 @@ class PRW_Data_Opvrager:
         else:
             raise KeyError('No features were selected in the layer')
 
-    # Querying meetpunten
+    # Querying peilbuizen tabel
     def get_peilbuizen(self, pbs_ids):
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
             if len(pbs_ids) > 0:
