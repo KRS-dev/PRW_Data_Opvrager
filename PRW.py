@@ -276,7 +276,6 @@ class PRW_Data_Opvrager:
         df_pbs = self.get_peilbuizen(pbs_ids)
         #df_projecten = self.get_projecten(pbs_ids)
         df_meetgegevens = self.get_meetgegevens(pbs_ids)
-        print(df_meetgegevens)
         # Check if the directory still has to be made.
         if os.path.isdir(self.outputLocation) == False:
             os.mkdir(self.outputLocation)
@@ -412,22 +411,22 @@ class PRW_Data_Opvrager:
                     chunks = [values[x:x+990] for x in range(0, len(values), 990)]
                     df_list = []
                     for chunk in chunks:
-                            values = chunk
-                            bindValues = [':' + str(i+1) for i in range(len(values))]
-                            bindDate = [':dateMin', ':dateMax']
-                            bindAll = bindValues + bindDate
-                            values = values + [self.dateMin, self.dateMax]
-                            bindDict = dict(zip(bindAll, values))
-                            query = '''SELECT * FROM prw_meetgegevens \
-                                WHERE datum_meeting BETWEEN TO_DATE ( :dateMin, 'yyyy-mm-dd')
-                                AND TO_DATE ( :dateMax, 'yyyy-mm-dd') \
-                                AND pbs_id IN ({})'''.format(','.join(bindValues))
-                            fetched, description = self.fetch(query, bindDict)
-                            if(len(fetched) > 0):
-                                mtg_df = pd.DataFrame(fetched)
-                                colnames = [desc[0] for desc in description]
-                                mtg_df.columns = colnames
-                                df_list.append(mtg_df)
+                        values = chunk
+                        bindValues = [':' + str(i+1) for i in range(len(values))]
+                        bindDate = [':dateMin', ':dateMax']
+                        bindAll = bindValues + bindDate
+                        values = values + [self.dateMin, self.dateMax]
+                        bindDict = dict(zip(bindAll, values))
+                        query = 'SELECT * FROM prw_meetgegevens' + \
+                            'WHERE datum_meeting BETWEEN TO_DATE (:dateMin, \'yyyy-mm-dd\')' + \
+                            'AND TO_DATE (:dateMax, \'yyyy-mm-dd\')' + \
+                            'AND pbs_id IN ({})'.format(','.join(bindValues))
+                        fetched, description = self.fetch(query, bindDict)
+                        if(len(fetched) > 0):
+                            mtg_df = pd.DataFrame(fetched)
+                            colnames = [desc[0] for desc in description]
+                            mtg_df.columns = colnames
+                            df_list.append(mtg_df)
                     mtg_df_all = pd.concat(df_list, ignore_index=True)
                     if mtg_df_all.empty != True:
                         return mtg_df_all
