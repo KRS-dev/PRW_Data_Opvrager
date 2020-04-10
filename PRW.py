@@ -298,7 +298,7 @@ class PRW_Data_Opvrager:
             for pbs_id in df_meetgegevens['PBS_ID'].unique():
                 df_temp = df_meetgegevens[df_meetgegevens['PBS_ID'] == pbs_id]
                 df_temp = df_temp[['DATUM_METING', 'ID', 'WNC_CODE','MEETWAARDE']]
-                columnIndex = pd.MultiIndex([(pbs_id,'ID'), (pbs_id 'WNC_CODE'), (pbs_id, 'MEETWAARDE')])
+                columnIndex = pd.MultiIndex([(pbs_id, 'ID'), (pbs_id, 'WNC_CODE'), (pbs_id, 'MEETWAARDE')])
                 df_print = pd.DataFrame(df_temp[['ID', 'WNC_CODE', 'MEETWAARDE']], index=df_temp['DATUM_METING'], columns=columnIndex)
                 df_print.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcol=column)
                 column = column + 5
