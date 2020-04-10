@@ -49,6 +49,13 @@
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QgsDateTimeEdit" name="DateMin">
+        <property name="date">
+         <date>
+          <year>2019</year>
+          <month>4</month>
+          <day>11</day>
+         </date>
+        </property>
         <property name="currentSection">
          <enum>QDateTimeEdit::DaySection</enum>
         </property>
@@ -57,6 +64,9 @@
         </property>
         <property name="calendarPopup">
          <bool>true</bool>
+        </property>
+        <property name="currentSectionIndex">
+         <number>0</number>
         </property>
         <property name="allowNull">
          <bool>false</bool>
@@ -77,9 +87,9 @@
        <widget class="QgsDateTimeEdit" name="DateMax">
         <property name="time">
          <time>
-          <hour>23</hour>
-          <minute>59</minute>
-          <second>59</second>
+          <hour>0</hour>
+          <minute>0</minute>
+          <second>0</second>
          </time>
         </property>
         <property name="displayFormat">
@@ -93,15 +103,43 @@
      </layout>
     </item>
     <item>
-     <widget class="QLineEdit" name="FileName"/>
+     <widget class="QLineEdit" name="FileName">
+      <property name="toolTip">
+       <string/>
+      </property>
+      <property name="accessibleName">
+       <string/>
+      </property>
+      <property name="inputMask">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>Prowat_Meetgegevens.xlsx</string>
+      </property>
+      <property name="clearButtonEnabled">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QgsFileWidget" name="OutputLocation">
       <property name="fileWidgetButtonVisible">
        <bool>true</bool>
       </property>
+      <property name="useLink">
+       <bool>false</bool>
+      </property>
+      <property name="fullUrl">
+       <bool>false</bool>
+      </property>
+      <property name="dialogTitle">
+       <string/>
+      </property>
       <property name="filter">
-       <string>.xls .xlsx</string>
+       <string/>
+      </property>
+      <property name="defaultRoot">
+       <string>C:\Users\Desktop\Desktop\</string>
       </property>
      </widget>
     </item>

@@ -29,7 +29,12 @@ from qgis.PyQt.QtWidgets import QAction
 from .resources import *
 # Import the code for the dialog
 from .PRW_dialog import PRW_Data_OpvragerDialog
-import os.path
+from qgis.core import QgsDataSourceUri, QgsCredentials
+
+import os
+import xlwt, pandas
+import cx_Oracle as cora
+
 
 
 class PRW_Data_Opvrager:
@@ -66,6 +71,17 @@ class PRW_Data_Opvrager:
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
+
+        # Initialize database connector variables
+        self.username = None
+        self.password = None
+        self.dsn = None
+        self.selected_layer = None
+        self.database = None
+        self.dateMax = None
+        self.dateMin = None
+        self.fileName = None
+        self.outputLocation = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -188,6 +204,8 @@ class PRW_Data_Opvrager:
         if self.first_start == True:
             self.first_start = False
             self.dlg = PRW_Data_OpvragerDialog()
+            self.dlg.OutputLocation.setStorageMode(1)
+            self.dlg.OutputLocation.setFilePath(self.dlg.OutputLocation.defaultRoot())
 
         settings = QSettings()
         allkeys = settings.allKeys()
@@ -202,54 +220,232 @@ class PRW_Data_Opvrager:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            selected_layer = self.dlg.cmb_layers.currentLayer()
-            dateMax = self.dlg.DateMax.date()
-            dateMin = self.dlg.DateMin.date()
-            fileName = self.dlg.FileName.text()
-            outputLocation = self.dlg.OutputLocation.filePath()
+            self.selected_layer = self.dlg.MapLayerComboBox.currentLayer()
+            self.database = self.dlg.DatabaseComboBox.currentText()
+            self.dateMax = self.dlg.DateMax.date()
+            self.dateMin = self.dlg.DateMin.date()
+            self.fileName = self.dlg.FileName.text()
+            self.outputLocation = self.dlg.OutputLocation.filePath()
 
+            print('selected_layer: {}'.format(self.selected_layer))
+            print('database: {}'.format(self.database))
+            print('dateMax {}'.format(self.dateMax.toString('yyyy-MM-dd')))
+            print('dateMin {}'.format(self.dateMin.toString('yyyy-MM-dd')))
+            print('filename {}'.format(self.fileName))
+            print('outputLocation {}'.format(self.outputLocation))
+
+            
             settings = QSettings()
             allkeys = settings.allKeys()
             allvalues = [settings.value(k) for k in allkeys]
             allsettings = dict(zip(allkeys, allvalues))
-            database = self.dlg.cmb_databases.currentText()
             for key, val in allsettings.items():
                 if 'database' in key:
-                    if val == database:
+                    if val == self.database:
                         databasekey = key
             databasekey = databasekey.rstrip('database')
             selected_databasekeys = [k for k in allkeys if databasekey in k]
             host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
             port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
-            username = settings.value([k for k in selected_databasekeys if 'username' in k][0])
-            password = settings.value([k for k in selected_databasekeys if 'password' in k][0])
-
-            success, username, password, message = self.get_credentials(host, port, database, username=username, password=password)
-            while success == 'false':
-                success, username, password, message = self.get_credentials(host, port, database, message=message)
-            if success == 'exit':
-                pass
-            elif suc == 'true':
-                print('success')
-                ## ask database stuff
+            self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0])
+            self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0])
+            self.dsn = cora.makedsn(host, port, service_name=self.database)
+            
+            errorMessage = None
+            if self.username != None and self.password != None:
+                self.username = username
+                self.password = password
+                try:
+                    self.check_connection()
+                    self.get_data()
+                except cx_Oracle.DatabaseError as e:
+                    errorObj, = e.args
+                    erroMessage = errorObj.message
+                    while success == 'false':
+                        success, self.username, self.password, errorMessage = \
+                            self.get_credentials(host, port, database, message=errorMessage)
+                    if success == 'exit':
+                        pass
+                    elif success == 'true':
+                        self.get_data()
+            else:
+                success, self.username, self.password, errorMessage = \
+                    self.get_credentials(host, port, database, username=username, password=password)
+                while success == 'false':
+                    success, self.username, self.password, errorMessage = \
+                        self.get_credentials(host, port, database, message=errorMessage)
+                if success == 'exit':
+                    pass
+                elif success == 'true':
+                    self.get_data()
     
+    def get_data(self):
+        pbs_ids = self.get_pbs_ids(selected_layer)
+        df_pbs = self.get_peilbuizen(pbs_ids)
+        df_projecten = self.get_projecten(pbs_ids)
+        df_meetgegevens = self.get_meetgegevens(pbs_ids, self.dateMin, self.DateMax)
+        
+        # Check if the directory still has to be made.
+        if os.path.isdir(self.outputLocation) == False:
+            os.mkdir(self.outputLocation)
+
+        output_file_dir = os.path.join(self.outputLocation, self.fileName)
+        if os.path.exists(output_file_dir):
+            name, ext = self.fileName.split('.')
+            i = 1
+            while os.path.exists(os.path.join(
+                    output_location, name + '{}.'.format(i) + ext)):
+                i += 1
+            output_file_dir = os.path.join(
+                self.outputLocation, name + '{}.'.format(i) + ext)
+        
+        # Writing the data to excel sheets
+        with pd.ExcelWriter(output_file_dir, engine='xlwt', mode='w') as writer:
+            
+            df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen')
+            df_projecten.to_excel(writer, sheet_name='PRW_Projecten')
+            
+            column = 0
+            for pbs_id in df_meetgegevens['PBS_ID'].unique():
+                df_temp = df_meetgegevens[('PBS_ID' == pbs_id)]
+                df_temp = df_temp['DATUM_MEETING', 'ID', 'WNC_CODE','MEETWAARDE']
+                columnIndex = pd.MultiIndex.from_product(
+                    [[pbs_id]['ID', 'WNC_CODE', 'MEETWAARDE']])
+                df_print = pd.DataFrame(df_temp, index='DATUM_MEETING', columns=columnIndex)
+                df_print.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcolumn=column)
+                column = column + 5
+        # Start the excel file
+        os.startfile(output_file_dir)
+
+        
+
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
         uri = QgsDataSourceUri()
 
         uri.setConnection(host, port, database, username, password)
         connInfo = uri.connectionInfo()
-
-        if username or password not None:
-            # Check connection
-
-        (suc, user, passwd) = QgsCredentials.instance().get(connInfo, message=message)
+        
         errorMessage = None
-        if suc:
+        (ok, user, passwd) = QgsCredentials.instance().get(connInfo, message=message)
+        if ok:
             # check if connection works otherwise return 'false'
             try:
-                
+                self.check_connection()
                 return 'true', user, passwd, errorMessage
-            except:
+            except cora.DatabaseError as e:
+                errorObj, = e.args
+                errorMessage = errorObj.message
                 return 'false', user, passwd, errorMessage
         else:
             return 'exit', user, passwd, errorMessage
+    
+    def check_connection(self):
+        # Cora.connect throws an exception/error when the username/password is wrong
+        with cora.connect(
+            user=self.username,
+            password=self.password, 
+            dsn=self.dsn
+                ) as dbcon:
+            pass
+    
+    def fetch(self, query, data):
+        with cora.connect(
+            user=self.username,
+            password=self.password, 
+            dsn=self.dsn
+                ) as dbcon:
+            
+            cur = dbcon.cursor()
+            cur.execute(query, data)
+            fetched = cur.description
+            return fetched, description
+    
+    # Getting the loc_id's from the Qgislayer
+    def get_pbs_ids(self, qgisLayer):
+        pbs_ids = []
+        features = qgisLayer.selectedFeatures()
+
+        if len(features) > 0:
+            print(str(len(features)) + ' peilbuizen geselecteerd.')
+            for f in features:
+                try:
+                    pbs_ids.append(f.attribute('PBS_ID'))
+                except KeyError:
+                    raise KeyError(
+                        'This layer does not contain an attribute called pbs_id')
+                except:
+                    raise IOError(
+                        'Something went wrong in selecting the attribute \'pbs_id\'')
+            return pbs_ids
+        else:
+            raise KeyError('No features were selected in the layer')
+
+    # Querying meetpunten
+    def get_peilbuizen(self, pbs_ids):
+        if isinstance(pbs_ids, (list, tuple, pd.Series)):
+            if len(pbs_ids) > 0:
+                if(all(isinstance(x, int) for x in pbs_ids)):
+                    values = list(pbs_ids)
+                    chunks = [values[x:x+1000] for x in range(0, len(values), 1000)]
+                    df_list = []
+                    for chunk in chunks:
+                        values = chunk
+                        bindValues = [':' + str(i+1) for i in range(len(values))]
+                        query = 'SELECT * FROM prw_peilbuizen '\
+                            + 'WHERE pbs_id IN ({})'.format(','.join(bindValues))
+                        fetched, description = self.fetch(query, values)
+                        if (0 < len(fetched)):
+                            pbs_df = pd.DataFrame(fetched)
+                            colnames = [desc[0] for desc in description]
+                            pbs_df.columns = colnames
+                            df_list.append(pbs_df)
+                    pbs_df_all = pd.concat(df_list, ignore_index=True)
+                    if pbs_df_all.empty != True:
+                        return pbs_df_all
+                    else:
+                        raise ValueError(
+                            'These selected geometry points do not contain valid pbs_ids: ' + str(values))
+                else:
+                    raise TypeError('not all inputs are integers')
+            else:
+                raise ValueError('No pbs_ids were supplied.')
+        else:
+            raise TypeError('Input is not a list or tuple')
+    
+    def get_meetgegevens(self, pbs_ids):
+        if isinstance(pbs_ids, (list, tuple, pd.Series)):
+            if len(pbs_ids) > 0:
+                if(all(isinstance(x, int) for x in pbs_ids)):
+                    values = list(pbs_ids)
+                    chunks = [values[x:x+990] for x in range(0, len(values), 990)]
+                    df_list = []
+                    for chunk in chunks:
+                            values = chunk
+                            bindValues = [':' + str(i+1) for i in range(len(values))]
+                            bindDate = [':dateMin', ':dateMax']
+                            bindAll = bindValues + bindDate
+                            values = values + [self.dateMin, self.dateMax]
+                            bindDict = dict(zip(bindAll, values))
+                            query = '''SELECT * FROM prw_meetgegevens \
+                                WHERE datum_meeting BETWEEN TO_DATE ( :dateMin, 'yyyy-mm-dd')
+                                AND TO_DATE ( :dateMax, 'yyyy-mm-dd') \
+                                AND pbs_id IN ({})'''.format(','.join(bindValues))
+                            fetched, description = self.fetch(query, bindDict)
+                            if(len(fetched) > 0):
+                                mtg_df = pd.DataFrame(fetched)
+                                colnames = [desc[0] for desc in description]
+                                mtg_df.columns = colnames
+                                df_list.append(mtg_df)
+                    mtg_df_all = pd.concat(df_list, ignore_index=True)
+                    if mtg_df_all.empty != True:
+                        return mtg_df_all
+                    else:
+                        raise ValueError(
+                            'Deze PBS_IDS hebben geen meetgegevens beschikbaar tussen '\
+                                 + dateMin + ' en ' + dateMax + '\n PBS_IDS: ' + str(values))
+                else:
+                    raise TypeError('not all inputs are integers')
+            else:
+                raise ValueError('No pbs_ids were supplied.')
+        else:
+            raise TypeError('Input is not a list or tuple')
