@@ -278,7 +278,7 @@ class PRW_Data_Opvrager:
                     self.get_data()
     
     def get_data(self):
-        pbs_ids = self.get_pbs_ids(selected_layer)
+        pbs_ids = self.get_pbs_ids(self.selected_layer)
         df_pbs = self.get_peilbuizen(pbs_ids)
         df_projecten = self.get_projecten(pbs_ids)
         df_meetgegevens = self.get_meetgegevens(pbs_ids, self.dateMin, self.DateMax)
