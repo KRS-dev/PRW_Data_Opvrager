@@ -426,7 +426,7 @@ class PRW_Data_Opvrager:
                         query = 'SELECT * FROM prw.prw_meetgegevens ' + \
                             'WHERE datum_meting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
-                            'AND pbs_id IN ({});'.format(','.join(bindValues))
+                            'AND pbs_id IN ({})'.format(','.join(bindValues))
                         print(query)
                         print(bindDict)
                         fetched, description = self.fetch(query, bindDict)
