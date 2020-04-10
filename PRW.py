@@ -356,7 +356,8 @@ class PRW_Data_Opvrager:
             
             cur = dbcon.cursor()
             cur.execute(query, data)
-            fetched = cur.description
+            fetched = cur.fetchall()
+            description = cur.description
             return fetched, description
     
     # Getting the loc_id's from the Qgislayer
