@@ -432,6 +432,7 @@ class PRW_Data_Opvrager:
                             mtg_df.columns = colnames
                             df_list.append(mtg_df)
                     mtg_df_all = pd.concat(df_list, ignore_index=True)
+                    print(mtg_df_all)
                     if mtg_df_all.empty != True:
                         return mtg_df_all
                     else:
