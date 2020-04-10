@@ -32,7 +32,8 @@ from .PRW_dialog import PRW_Data_OpvragerDialog
 from qgis.core import QgsDataSourceUri, QgsCredentials
 
 import os
-import xlwt, pandas
+import xlwt
+import pandas as pd
 import cx_Oracle as cora
 
 
