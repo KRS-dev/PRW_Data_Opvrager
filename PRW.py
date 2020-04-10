@@ -281,7 +281,7 @@ class PRW_Data_Opvrager:
     def get_data(self):
         pbs_ids = self.get_pbs_ids(self.selected_layer)
         df_pbs = self.get_peilbuizen(pbs_ids)
-        df_projecten = self.get_projecten(pbs_ids)
+        #df_projecten = self.get_projecten(pbs_ids)
         df_meetgegevens = self.get_meetgegevens(pbs_ids, self.dateMin, self.DateMax)
         
         # Check if the directory still has to be made.
@@ -302,7 +302,7 @@ class PRW_Data_Opvrager:
         with pd.ExcelWriter(output_file_dir, engine='xlwt', mode='w') as writer:
             
             df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen')
-            df_projecten.to_excel(writer, sheet_name='PRW_Projecten')
+            #df_projecten.to_excel(writer, sheet_name='PRW_Projecten')
             
             column = 0
             for pbs_id in df_meetgegevens['PBS_ID'].unique():
@@ -391,7 +391,7 @@ class PRW_Data_Opvrager:
                         values = chunk
                         bindValues = [':' + str(i+1) for i in range(len(values))]
                         query = 'SELECT * FROM prw_peilbuizen '\
-                            + 'WHERE pbs_id IN ({})'.format(','.join(bindValues))
+                            + 'WHERE id IN ({})'.format(','.join(bindValues))
                         fetched, description = self.fetch(query, values)
                         if (0 < len(fetched)):
                             pbs_df = pd.DataFrame(fetched)
