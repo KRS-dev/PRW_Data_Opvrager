@@ -424,7 +424,7 @@ class PRW_Data_Opvrager:
                             'AND pbs_id IN ({})'.format(','.join(bindValues))
                         print(query)
                         fetched, description = self.fetch(query, bindDict)
-                        print(fetched)
+                        print('fetched')
                         if(len(fetched) > 0):
                             mtg_df = pd.DataFrame(fetched)
                             colnames = [desc[0] for desc in description]
