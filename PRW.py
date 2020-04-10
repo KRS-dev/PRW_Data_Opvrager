@@ -253,8 +253,6 @@ class PRW_Data_Opvrager:
             
             errorMessage = None
             if self.username != None and self.password != None:
-                self.username = username
-                self.password = password
                 try:
                     self.check_connection()
                     self.get_data()
