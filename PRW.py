@@ -274,10 +274,9 @@ class PRW_Data_Opvrager:
     def get_data(self):
         pbs_ids = self.get_pbs_ids(self.selected_layer)
         df_pbs = self.get_peilbuizen(pbs_ids)
-        print(df_pbs)
         #df_projecten = self.get_projecten(pbs_ids)
         df_meetgegevens = self.get_meetgegevens(pbs_ids)
-        
+        print(df_meetgegevens)
         # Check if the directory still has to be made.
         if os.path.isdir(self.outputLocation) == False:
             os.mkdir(self.outputLocation)
@@ -286,11 +285,9 @@ class PRW_Data_Opvrager:
         if os.path.exists(output_file_dir):
             name, ext = self.fileName.split('.')
             i = 1
-            while os.path.exists(os.path.join(
-                    output_location, name + '{}.'.format(i) + ext)):
+            while os.path.exists(os.path.join(output_location, name + '{}.'.format(i) + ext)):
                 i += 1
-            output_file_dir = os.path.join(
-                self.outputLocation, name + '{}.'.format(i) + ext)
+            output_file_dir = os.path.join(self.outputLocation, name + '{}.'.format(i) + ext)
         print(output_file_dir)
 
         # Writing the data to excel sheets
