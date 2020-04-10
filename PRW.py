@@ -311,7 +311,7 @@ class PRW_Data_Opvrager:
                 columnIndex = pd.MultiIndex.from_product(
                     [[pbs_id]['ID', 'WNC_CODE', 'MEETWAARDE']])
                 df_print = pd.DataFrame(df_temp, index='DATUM_MEETING', columns=columnIndex)
-                df_print.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcolumn=column)
+                df_print.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcol=column)
                 column = column + 5
         # Start the excel file
         os.startfile(output_file_dir)
