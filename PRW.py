@@ -409,9 +409,7 @@ class PRW_Data_Opvrager:
             if len(pbs_ids) > 0:
                 if(all(isinstance(x, int) for x in pbs_ids)):
                     values = list(pbs_ids)
-                    print('values')
                     chunks = [values[x:x+990] for x in range(0, len(values), 990)]
-                    print(chunks)
                     df_list = []
                     for chunk in chunks:
                         values = chunk
@@ -421,9 +419,10 @@ class PRW_Data_Opvrager:
                         values = values + [self.dateMin, self.dateMax]
                         print(values)
                         bindDict = dict(zip(bindAll, values))
-                        query = 'SELECT * FROM prw_meetgegevens' + \
-                            'WHERE datum_meeting BETWEEN TO_DATE (:dateMin, \'yyyy-mm-dd\')' + \
-                            'AND TO_DATE (:dateMax, \'yyyy-mm-dd\')' + \
+                        print(bindDict)
+                        query = 'SELECT * FROM prw_meetgegevens ' + \
+                            'WHERE datum_meeting BETWEEN TO_DATE (:dateMin, \'yyyy-mm-dd\') ' + \
+                            'AND TO_DATE (:dateMax, \'yyyy-mm-dd\') ' + \
                             'AND pbs_id IN ({})'.format(','.join(bindValues))
                         fetched, description = self.fetch(query, bindDict)
                         print(fetched)
