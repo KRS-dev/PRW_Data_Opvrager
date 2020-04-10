@@ -345,11 +345,12 @@ class PRW_Data_Opvrager:
             password=self.password, 
             dsn=self.dsn
                 ) as dbcon:
-            
+            print('fetching')
             cur = dbcon.cursor()
             cur.execute(query, data)
             fetched = cur.fetchall()
             description = cur.description
+            print('fetching done')
             return fetched, description
     
     # Getting the loc_id's from the Qgislayer
