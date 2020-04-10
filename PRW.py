@@ -345,15 +345,16 @@ class PRW_Data_Opvrager:
             password=self.password, 
             dsn=self.dsn
                 ) as dbcon:
-            print('fetching')
+            
             cur = dbcon.cursor()
-            print('cursor')
-            cur.execute(query, data)
-            print('execute')
+            try:
+                cur.execute(query, data)
+            except cora.DatabaseError:
+                errorObj, = e.args
+                errorMessage = errorObj.message
+                print(errorMessage)
             fetched = cur.fetchall()
-            print('fetchall')
             description = cur.description
-            print('fetching done')
             return fetched, description
     
     # Getting the loc_id's from the Qgislayer
@@ -423,7 +424,7 @@ class PRW_Data_Opvrager:
                         values = values + [self.dateMin, self.dateMax]
                         bindDict = dict(zip(bindAll, values))
                         query = 'SELECT * FROM prw.prw_meetgegevens ' + \
-                            'WHERE datum_meeting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
+                            'WHERE datum_meting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
                             'AND pbs_id IN ({});'.format(','.join(bindValues))
                         print(query)
