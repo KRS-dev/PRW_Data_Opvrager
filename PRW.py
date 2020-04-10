@@ -227,14 +227,6 @@ class PRW_Data_Opvrager:
             self.dateMin = self.dlg.DateMin.date().toString('yyyy-MM-dd')
             self.fileName = self.dlg.FileName.text()
             self.outputLocation = self.dlg.OutputLocation.filePath()
-
-            print('selected_layer: {}'.format(self.selected_layer))
-            print('database: {}'.format(self.database))
-            print('dateMax {}'.format(self.dateMax.toString('yyyy-MM-dd')))
-            print('dateMin {}'.format(self.dateMin.toString('yyyy-MM-dd')))
-            print('filename {}'.format(self.fileName))
-            print('outputLocation {}'.format(self.outputLocation))
-
             
             settings = QSettings()
             allkeys = settings.allKeys()
