@@ -288,17 +288,15 @@ class PRW_Data_Opvrager:
             while os.path.exists(os.path.join(output_location, name + '{}.'.format(i) + ext)):
                 i += 1
             output_file_dir = os.path.join(self.outputLocation, name + '{}.'.format(i) + ext)
-        print(output_file_dir)
 
         # Writing the data to excel sheets
         with pd.ExcelWriter(output_file_dir, engine='xlwt', mode='w') as writer:
-            print('excelwriter')
             df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen')
             #df_projecten.to_excel(writer, sheet_name='PRW_Projecten')
             
             column = 0
             for pbs_id in df_meetgegevens['PBS_ID'].unique():
-                df_temp = df_meetgegevens[('PBS_ID' == pbs_id)]
+                df_temp = df_meetgegevens[df_meetgegevens['PBS_ID'] == pbs_id]
                 df_temp = df_temp['DATUM_MEETING', 'ID', 'WNC_CODE','MEETWAARDE']
                 columnIndex = pd.MultiIndex.from_product(
                     [[pbs_id]['ID', 'WNC_CODE', 'MEETWAARDE']])
@@ -427,17 +425,13 @@ class PRW_Data_Opvrager:
                             'WHERE datum_meting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
                             'AND pbs_id IN ({})'.format(','.join(bindValues))
-                        print(query)
-                        print(bindDict)
                         fetched, description = self.fetch(query, bindDict)
-                        print('fetched')
                         if(len(fetched) > 0):
                             mtg_df = pd.DataFrame(fetched)
                             colnames = [desc[0] for desc in description]
                             mtg_df.columns = colnames
                             df_list.append(mtg_df)
                     mtg_df_all = pd.concat(df_list, ignore_index=True)
-                    print(mtg_df_all)
                     if mtg_df_all.empty != True:
                         return mtg_df_all
                     else:
