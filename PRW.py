@@ -223,8 +223,8 @@ class PRW_Data_Opvrager:
         if result:
             self.selected_layer = self.dlg.MapLayerComboBox.currentLayer()
             self.database = self.dlg.DatabaseComboBox.currentText()
-            self.dateMax = self.dlg.DateMax.date()
-            self.dateMin = self.dlg.DateMin.date()
+            self.dateMax = self.dlg.DateMax.date().toString('yyyy-MM-dd')
+            self.dateMin = self.dlg.DateMin.date().toString('yyyy-MM-dd')
             self.fileName = self.dlg.FileName.text()
             self.outputLocation = self.dlg.OutputLocation.filePath()
 
@@ -260,6 +260,7 @@ class PRW_Data_Opvrager:
                 except cora.DatabaseError as e:
                     errorObj, = e.args
                     erroMessage = errorObj.message
+                    success = None
                     while success == 'false':
                         success, self.username, self.password, errorMessage = \
                             self.get_credentials(host, port, database, message=errorMessage)
