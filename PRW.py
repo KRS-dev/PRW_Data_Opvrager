@@ -383,7 +383,7 @@ class PRW_Data_Opvrager:
                     for chunk in chunks:
                         values = chunk
                         bindValues = [':' + str(i+1) for i in range(len(values))]
-                        query = 'SELECT * FROM prw_peilbuizen '\
+                        query = 'SELECT * FROM prw.prw_peilbuizen '\
                             + 'WHERE id IN ({})'.format(','.join(bindValues))
                         fetched, description = self.fetch(query, values)
                         if (0 < len(fetched)):
@@ -418,7 +418,7 @@ class PRW_Data_Opvrager:
                         bindAll =  bindValues + bindDate
                         values = values + [self.dateMin, self.dateMax]
                         bindDict = dict(zip(bindAll, values))
-                        query = 'SELECT * FROM prw_meetgegevens ' + \
+                        query = 'SELECT * FROM prw.prw_meetgegevens ' + \
                             'WHERE datum_meeting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
                             'AND pbs_id IN ({});'.format(','.join(bindValues))
