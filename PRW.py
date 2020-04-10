@@ -296,6 +296,7 @@ class PRW_Data_Opvrager:
             
             column = 0
             for pbs_id in df_meetgegevens['PBS_ID'].unique():
+                pbs_id = int(pbs_id)
                 df_temp = df_meetgegevens[df_meetgegevens['PBS_ID'] == pbs_id]
                 df_temp = df_temp[['DATUM_METING', 'ID', 'WNC_CODE','MEETWAARDE']]
                 columnIndex = pd.MultiIndex([(pbs_id, 'ID'), (pbs_id, 'WNC_CODE'), (pbs_id, 'MEETWAARDE')])
