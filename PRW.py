@@ -415,7 +415,7 @@ class PRW_Data_Opvrager:
                         values = chunk
                         bindValues = [':' + str(i+1) for i in range(len(values))]
                         bindDate = [':dateMin', ':dateMax']
-                        bindAll = bindDate + bindValues
+                        bindAll =  bindValues + bindDate
                         values = values + [self.dateMin, self.dateMax]
                         bindDict = dict(zip(bindAll, values))
                         query = 'SELECT * FROM prw_meetgegevens ' + \
