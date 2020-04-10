@@ -285,7 +285,7 @@ class PRW_Data_Opvrager:
         if os.path.exists(output_file_dir):
             name, ext = self.fileName.split('.')
             i = 1
-            while os.path.exists(os.path.join(output_location, name + '{}.'.format(i) + ext)):
+            while os.path.exists(os.path.join(outputLocation, name + '{}.'.format(i) + ext)):
                 i += 1
             output_file_dir = os.path.join(self.outputLocation, name + '{}.'.format(i) + ext)
 
