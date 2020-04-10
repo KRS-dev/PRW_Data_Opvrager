@@ -275,7 +275,7 @@ class PRW_Data_Opvrager:
         pbs_ids = self.get_pbs_ids(self.selected_layer)
         df_pbs = self.get_peilbuizen(pbs_ids)
         #df_projecten = self.get_projecten(pbs_ids)
-        df_meetgegevens = self.get_meetgegevens(pbs_ids)
+        #df_meetgegevens = self.get_meetgegevens(pbs_ids)
         print(df_meetgegevens)
         # Check if the directory still has to be made.
         if os.path.isdir(self.outputLocation) == False:
@@ -423,6 +423,7 @@ class PRW_Data_Opvrager:
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
                             'AND pbs_id IN ({})'.format(','.join(bindValues))
                         print(query)
+                        print(bindDict)
                         fetched, description = self.fetch(query, bindDict)
                         print('fetched')
                         if(len(fetched) > 0):
