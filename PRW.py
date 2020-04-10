@@ -349,7 +349,7 @@ class PRW_Data_Opvrager:
             cur = dbcon.cursor()
             try:
                 cur.execute(query, data)
-            except cora.DatabaseError:
+            except cora.DatabaseError as e:
                 errorObj, = e.args
                 errorMessage = errorObj.message
                 print(errorMessage)
