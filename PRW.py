@@ -335,7 +335,7 @@ class PRW_Data_Opvrager:
         connInfo = uri.connectionInfo()
         
         errorMessage = None
-        (ok, user, passwd) = QgsCredentials.instance().get(connInfo, message=message)
+        (ok, user, passwd) = QgsCredentials.instance().get(connInfo, message)
         if ok:
             # check if connection works otherwise return 'false'
             try:
