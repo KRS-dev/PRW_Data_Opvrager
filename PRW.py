@@ -307,7 +307,7 @@ class PRW_Data_Opvrager:
             output_file_dir = os.path.join(self.outputLocation, name + '{}.'.format(i) + ext)
 
         # Writing the data to excel sheets
-        with pd.ExcelWriter(output_file_dir, engine='xlwt', mode='w') as writer:
+        with pd.ExcelWriter(output_file_dir, engine='openpyxl', mode='w') as writer:
             df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen')
             #df_projecten.to_excel(writer, sheet_name='PRW_Projecten')
             
