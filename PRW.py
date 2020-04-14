@@ -221,6 +221,7 @@ class PRW_Data_Opvrager:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
+            # Extracting values from the dialog form
             self.selected_layer = self.dlg.MapLayerComboBox.currentLayer()
             self.database = self.dlg.DatabaseComboBox.currentText()
             self.dateMax = self.dlg.DateMax.date().toString('yyyy-MM-dd')
@@ -228,14 +229,21 @@ class PRW_Data_Opvrager:
             self.fileName = self.dlg.FileName.text()
             self.outputLocation = self.dlg.OutputLocation.filePath()
             
+            # Retrieving necessary database info through the QSettings
             settings = QSettings()
+            # All settings in Qgis have a key and a value
+            # allKeys() will find all global keys in het project
             allkeys = settings.allKeys()
             allvalues = [settings.value(k) for k in allkeys]
             allsettings = dict(zip(allkeys, allvalues))
+            # Getting the key that forms a pair with the selected database name
             for key, val in allsettings.items():
                 if 'database' in key:
                     if val == self.database:
                         databasekey = key
+            # Keys from the same database are stored hierarchical as:
+            # Oracle/connections/database_name/database_key_name ... etc.
+            # Here we want all keys related to database_name  
             databasekey = databasekey.rstrip('database')
             selected_databasekeys = [k for k in allkeys if databasekey in k]
             host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
@@ -243,9 +251,18 @@ class PRW_Data_Opvrager:
             self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
             self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
             self.dsn = cora.makedsn(host, port, service_name=self.database)
+
+            # If there is no value for the password or username stored in the settings
+            # Qgis returns a Qvariant NULL which is not automatically translated to the None syntax of python
+            if self.username == NULL:
+                self.username = None
+            if self.password == NULL:
+                self.password = None
             
             errorMessage = None
-            if self.username != None and self.password != None:
+            # If we have a username and password try to connect,
+            # otherwise store error and show dialog screen for credentials input
+            if self.username is not None and self.password is not None:
                 try:
                     self.check_connection()
                     self.get_data()
