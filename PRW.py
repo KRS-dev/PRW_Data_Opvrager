@@ -261,7 +261,7 @@ class PRW_Data_Opvrager:
                     elif success == 'true':
                         self.get_data()
             else:
-                print(self.username)
+                print(type(self.username))
                 print(self.password)
                 success, self.username, self.password, errorMessage = \
                     self.get_credentials(host, port, self.database, username=self.username, password=self.password)
