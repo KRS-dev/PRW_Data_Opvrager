@@ -271,20 +271,18 @@ class PRW_Data_Opvrager:
                     erroMessage = errorObj.message
                     success = None
                     while success == 'false':
-                        success, self.username, self.password, errorMessage = \
+                        success, errorMessage = \
                             self.get_credentials(host, port, self.database, message=errorMessage)
                     if success == 'exit':
                         pass
                     elif success == 'true':
                         self.get_data()
             else:
-                print(type(self.username))
-                print(self.password)
-                success, self.username, self.password, errorMessage = \
+                success, errorMessage = \
                     self.get_credentials(host, port, self.database, username=self.username, password=self.password)
                 while success == 'false':
-                    success, self.username, self.password, errorMessage = \
-                        self.get_credentials(host, port, self.database, message=errorMessage)
+                    success, errorMessage = \
+                        self.get_credentials(host, port, self.database, username=self.username, password=self.password, message=errorMessage)
                 if success == 'exit':
                     pass
                 elif success == 'true':
@@ -319,7 +317,8 @@ class PRW_Data_Opvrager:
                 pbs_id = int(pbs_id)
                 df_temp = df_meetgegevens[df_meetgegevens['PBS_ID'] == pbs_id]
                 df_temp = df_temp[['DATUM_METING', 'ID', 'WNC_CODE','MEETWAARDE']]
-                columnIndex = pd.MultiIndex([(pbs_id, 'ID'), (pbs_id, 'WNC_CODE'), (pbs_id, 'MEETWAARDE')])
+                tuples = ((pbs_id, 'ID'), (pbs_id, 'WNC_CODE'), (pbs_id, 'MEETWAARDE'))
+                columnIndex = pd.MultiIndex(tuples, names=['PBS_ID', 'MEETGEGEVENS'])
                 df_print = pd.DataFrame(df_temp[['ID', 'WNC_CODE', 'MEETWAARDE']], index=df_temp['DATUM_METING'], columns=columnIndex)
                 df_print.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcol=column)
                 column = column + 5
@@ -337,16 +336,18 @@ class PRW_Data_Opvrager:
         errorMessage = None
         (ok, user, passwd) = QgsCredentials.instance().get(connInfo, username, password, message)
         if ok:
+            self.username = user
+            self.password = passwd
             # check if connection works otherwise return 'false'
             try:
                 self.check_connection()
-                return 'true', user, passwd, errorMessage
+                return 'true', errorMessage
             except cora.DatabaseError as e:
                 errorObj, = e.args
                 errorMessage = errorObj.message
-                return 'false', user, passwd, errorMessage
+                return 'false', errorMessage
         else:
-            return 'exit', user, passwd, errorMessage
+            return 'exit', errorMessage
     
     def check_connection(self):
         # Cora.connect throws an exception/error when the username/password is wrong
