@@ -281,6 +281,7 @@ class PRW_Data_Opvrager:
         if os.path.isdir(self.outputLocation) == False:
             os.mkdir(self.outputLocation)
 
+        # Check if the selected filename already exists in the dir
         output_file_dir = os.path.join(self.outputLocation, self.fileName)
         if os.path.exists(output_file_dir):
             name, ext = self.fileName.split('.')
