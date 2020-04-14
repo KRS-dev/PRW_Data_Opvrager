@@ -21,7 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QVariant
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
@@ -254,10 +254,12 @@ class PRW_Data_Opvrager:
 
             # If there is no value for the password or username stored in the settings
             # Qgis returns a NULL Qvariant which is not automatically translated to the None syntax of python
-            if self.username.isNull():
-                self.username = None
-            if self.password.isNull():
-                self.password = None
+            if type(self.username) == QVariant:
+                if self.username.isNull():
+                    self.username = None
+            if type(self.password) == QVariant:
+                if self.password.isNull():
+                    self.password = None
             
             errorMessage = None
             # If we have a username and password try to connect,
