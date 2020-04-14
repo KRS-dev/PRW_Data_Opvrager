@@ -316,13 +316,10 @@ class PRW_Data_Opvrager:
                 pbs_id = int(pbs_id)
                 df_temp = df_meetgegevens[df_meetgegevens['PBS_ID'] == pbs_id]
                 df_temp = df_temp[['DATUM_METING', 'ID', 'WNC_CODE','MEETWAARDE']]
-                print(df_temp)
                 tuples = ((pbs_id, 'ID'), (pbs_id, 'WNC_CODE'), (pbs_id, 'MEETWAARDE'))
                 columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PBS_ID', 'MEETGEGEVENS'])
                 df_temp = df_temp.set_index('DATUM_METING') 
                 df_temp.columns = columnIndex
-                #df_print = pd.DataFrame(df_temp[['ID', 'WNC_CODE', 'MEETWAARDE']], index=df_temp['DATUM_METING'], columns=columnIndex)
-                print(df_temp)
                 df_temp.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcol=column)
                 column = column + 5
         # Start the excel file
