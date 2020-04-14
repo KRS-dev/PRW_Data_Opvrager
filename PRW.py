@@ -255,17 +255,17 @@ class PRW_Data_Opvrager:
                     success = None
                     while success == 'false':
                         success, self.username, self.password, errorMessage = \
-                            self.get_credentials(host, port, database, message=errorMessage)
+                            self.get_credentials(host, port, self.database, message=errorMessage)
                     if success == 'exit':
                         pass
                     elif success == 'true':
                         self.get_data()
             else:
                 success, self.username, self.password, errorMessage = \
-                    self.get_credentials(host, port, database, username=username, password=password)
+                    self.get_credentials(host, port, self.database, username=self.username, password=self.password)
                 while success == 'false':
                     success, self.username, self.password, errorMessage = \
-                        self.get_credentials(host, port, database, message=errorMessage)
+                        self.get_credentials(host, port, self.database, message=errorMessage)
                 if success == 'exit':
                     pass
                 elif success == 'true':
