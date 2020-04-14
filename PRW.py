@@ -238,10 +238,10 @@ class PRW_Data_Opvrager:
                         databasekey = key
             databasekey = databasekey.rstrip('database')
             selected_databasekeys = [k for k in allkeys if databasekey in k]
-            host = settings.value([k for k in selected_databasekeys if 'host' in k][0]).toString()
-            port = settings.value([k for k in selected_databasekeys if 'port' in k][0]).toString()
-            self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0]).toString()
-            self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0]).toString()
+            host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
+            port = settings.value([k for k in selected_databasekeys if 'port' in k][0], 1521)
+            self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
+            self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
             self.dsn = cora.makedsn(host, port, service_name=self.database)
             
             errorMessage = None
