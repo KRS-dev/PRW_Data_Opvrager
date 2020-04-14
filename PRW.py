@@ -319,7 +319,7 @@ class PRW_Data_Opvrager:
                 print(df_temp)
                 tuples = ((pbs_id, 'ID'), (pbs_id, 'WNC_CODE'), (pbs_id, 'MEETWAARDE'))
                 columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PBS_ID', 'MEETGEGEVENS'])
-                df_temp.set_index('DATUM_METING') 
+                df_temp = df_temp.set_index('DATUM_METING') 
                 df_temp.columns = columnIndex
                 #df_print = pd.DataFrame(df_temp[['ID', 'WNC_CODE', 'MEETWAARDE']], index=df_temp['DATUM_METING'], columns=columnIndex)
                 print(df_temp)
