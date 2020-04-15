@@ -291,6 +291,7 @@ class PRW_Data_Opvrager:
                     self.get_data()
     
     def get_data(self):
+        '''Fetch data and write it off to an excel file in the selected file location.'''
         pbs_ids = self.get_pbs_ids(self.selected_layer)
         df_pbs = self.get_peilbuizen(pbs_ids)
         #df_projecten = self.get_projecten(pbs_ids)
@@ -330,6 +331,7 @@ class PRW_Data_Opvrager:
         
 
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
+        '''Show a credentials dialog form to access the database. Checks credentials when clicked ok.'''
         uri = QgsDataSourceUri()
 
         uri.setConnection(host, port, database, username, password)
@@ -352,6 +354,8 @@ class PRW_Data_Opvrager:
             return 'exit', errorMessage
     
     def check_connection(self):
+        '''Checks the Oracle database connection. 
+        cx_Oracle.databaseError's are thrown out if the connection does not work.'''
         # Cora.connect throws an exception/error when the username/password is wrong
         with cora.connect(
             user=self.username,
@@ -361,6 +365,7 @@ class PRW_Data_Opvrager:
             pass
     
     def fetch(self, query, data):
+        '''Fetch queries with the data in bindValues.'''
         with cora.connect(
             user=self.username,
             password=self.password, 
@@ -380,6 +385,7 @@ class PRW_Data_Opvrager:
     
     # Getting the loc_id's from the Qgislayer
     def get_pbs_ids(self, qgisLayer):
+        '''Extract from the selected peilbuizen in the layer the id's.'''
         pbs_ids = []
         features = qgisLayer.selectedFeatures()
 
@@ -400,6 +406,7 @@ class PRW_Data_Opvrager:
 
     # Querying peilbuizen tabel
     def get_peilbuizen(self, pbs_ids):
+        '''Setting up the queries to fetch all data from the PRW_Peilbuizen table and processing the data as a pandas.DataFrame.'''
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
             if len(pbs_ids) > 0:
                 if(all(isinstance(x, int) for x in pbs_ids)):
@@ -431,6 +438,7 @@ class PRW_Data_Opvrager:
             raise TypeError('Input is not a list or tuple')
     
     def get_meetgegevens(self, pbs_ids):
+        '''Setting up the queries to fetch all data from the PRW_Meetgegevens table and processing the data as a pandas.Dataframe.'''
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
             if len(pbs_ids) > 0:
                 if(all(isinstance(x, int) for x in pbs_ids)):
