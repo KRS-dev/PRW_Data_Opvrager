@@ -267,7 +267,6 @@ class PRW_Data_Opvrager:
             if self.username is not None and self.password is not None:
                 try:
                     self.check_connection()
-                    self.get_data()
                 except cora.DatabaseError as e:
                     errorObj, = e.args
                     erroMessage = errorObj.message
@@ -279,6 +278,8 @@ class PRW_Data_Opvrager:
                         pass
                     elif success == 'true':
                         self.get_data()
+                else:
+                    self.get_data() 
             else:
                 success, errorMessage = \
                     self.get_credentials(host, port, self.database, username=self.username, password=self.password)
@@ -300,10 +301,11 @@ class PRW_Data_Opvrager:
         if os.path.isdir(self.outputLocation) == False:
             os.mkdir(self.outputLocation)
 
+        fileNameExt = self.fileName + '.xlsx'
         # Check if the selected filename already exists in the dir
-        output_file_dir = os.path.join(self.outputLocation, self.fileName)
+        output_file_dir = os.path.join(self.outputLocation, fileNameExt)
         if os.path.exists(output_file_dir):
-            name, ext = self.fileName.split('.')
+            name, ext = self.fileNameExt.split('.')
             i = 1
             while os.path.exists(os.path.join(self.outputLocation, name + '{}.'.format(i) + ext)):
                 i += 1
@@ -396,10 +398,7 @@ class PRW_Data_Opvrager:
                     pbs_ids.append(f.attribute('ID'))
                 except KeyError:
                     raise KeyError(
-                        'This layer does not contain an attribute called pbs_id')
-                except:
-                    raise IOError(
-                        'Something went wrong in selecting the attribute \'pbs_id\'')
+                        'This layer does not contain an attribute called \'ID\'.')
             return pbs_ids
         else:
             raise KeyError('No features were selected in the layer')
@@ -429,7 +428,7 @@ class PRW_Data_Opvrager:
                         return pbs_df_all
                     else:
                         raise ValueError(
-                            'These selected geometry points do not contain valid pbs_ids: ' + str(values))
+                            'These selected GBS_ID\'s do not contain any valid: ' + str(values))
                 else:
                     raise TypeError('not all inputs are integers')
             else:

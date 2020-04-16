@@ -35,15 +35,45 @@
      <x>20</x>
      <y>10</y>
      <width>351</width>
-     <height>211</height>
+     <height>223</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>Selecteer de laag met Peilbuis ID's:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QgsMapLayerComboBox" name="MapLayerComboBox"/>
     </item>
     <item>
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>Selecteer de ProWat Database:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QComboBox" name="DatabaseComboBox"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_6">
+      <property name="text">
+       <string>Data:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+      </property>
+     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
@@ -51,7 +81,7 @@
        <widget class="QgsDateTimeEdit" name="DateMin">
         <property name="date">
          <date>
-          <year>2019</year>
+          <year>2000</year>
           <month>4</month>
           <day>11</day>
          </date>
@@ -103,6 +133,16 @@
      </layout>
     </item>
     <item>
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>Excel Bestand Naam:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QLineEdit" name="FileName">
       <property name="toolTip">
        <string/>
@@ -113,11 +153,24 @@
       <property name="inputMask">
        <string/>
       </property>
+      <property name="text">
+       <string>Prowat_Meetgegevens</string>
+      </property>
       <property name="placeholderText">
-       <string>Prowat_Meetgegevens.xlsx</string>
+       <string>Prowat_Meetgegevens</string>
       </property>
       <property name="clearButtonEnabled">
        <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Uitvoermap:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
       </property>
      </widget>
     </item>
