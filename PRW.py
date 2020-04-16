@@ -217,10 +217,12 @@ class PRW_Data_Opvrager:
 
         # show the dialog
         self.dlg.show()
+        print('dlg show')
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
+            print('dlg exec')
             # Extracting values from the dialog form
             self.selected_layer = self.dlg.MapLayerComboBox.currentLayer()
             self.database = self.dlg.DatabaseComboBox.currentText()
@@ -228,7 +230,7 @@ class PRW_Data_Opvrager:
             self.dateMin = self.dlg.DateMin.date().toString('yyyy-MM-dd')
             self.fileName = self.dlg.FileName.text()
             self.outputLocation = self.dlg.OutputLocation.filePath()
-            
+            print('dlg exec')
             # Retrieving necessary database info through the QSettings
             settings = QSettings()
             # All settings in Qgis have a key and a value
@@ -241,6 +243,7 @@ class PRW_Data_Opvrager:
                 if 'database' in key:
                     if val == self.database:
                         databasekey = key
+            print(databasekey)
             # Keys from the same database are stored hierarchical as:
             # Oracle/connections/database_name/database_key_name ... etc.
             # Here we want all keys related to database_name  
@@ -251,7 +254,9 @@ class PRW_Data_Opvrager:
             self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
             self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
             self.dsn = cora.makedsn(host, port, service_name=self.database)
-
+            print(self.username)
+            print(self.password)
+            print(self.dsn)
             # If there is no value for the password or username stored in the settings
             # Qgis returns a NULL Qvariant which is not automatically translated to the None syntax of python
             if type(self.username) == QVariant:
@@ -260,13 +265,15 @@ class PRW_Data_Opvrager:
             if type(self.password) == QVariant:
                 if self.password.isNull():
                     self.password = None
-            
+            print(self.username)
+            print(self.password)
             errorMessage = None
             # If we have a username and password try to connect,
             # otherwise store error and show dialog screen for credentials input
             if self.username is not None and self.password is not None:
                 try:
                     self.check_connection()
+                    self.get_data()
                 except cora.DatabaseError as e:
                     errorObj, = e.args
                     erroMessage = errorObj.message
