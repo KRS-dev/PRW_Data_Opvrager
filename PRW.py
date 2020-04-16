@@ -280,8 +280,6 @@ class PRW_Data_Opvrager:
                         pass
                     elif success == 'true':
                         self.get_data()
-                else:
-                    self.get_data() 
             else:
                 print('else')
                 success, errorMessage = \
