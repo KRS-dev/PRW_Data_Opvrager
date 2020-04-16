@@ -250,12 +250,13 @@ class PRW_Data_Opvrager:
             self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
             self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
             self.dsn = cora.makedsn(host, port, service_name=self.database)
+            print(self.password)
             # If there is no value for the password or username stored in the settings
             # Qgis returns a NULL Qvariant which is not automatically translated to the None syntax of python
-            if type(self.username) == QVariant:
+            if isinstance(self.username, QVariant):
                 if self.username.isNull():
                     self.username = None
-            if type(self.password) == QVariant:
+            if isinstance(self.password, QVariant):
                 if self.password.isNull():
                     self.password = None
             print(self.username)
@@ -306,7 +307,7 @@ class PRW_Data_Opvrager:
         # Check if the selected filename already exists in the dir
         output_file_dir = os.path.join(self.outputLocation, fileNameExt)
         if os.path.exists(output_file_dir):
-            name, ext = self.fileNameExt.split('.')
+            name, ext = fileNameExt.split('.')
             i = 1
             while os.path.exists(os.path.join(self.outputLocation, name + '{}.'.format(i) + ext)):
                 i += 1
