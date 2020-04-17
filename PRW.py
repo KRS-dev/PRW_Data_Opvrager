@@ -269,7 +269,7 @@ class PRW_Data_Opvrager:
                     self.get_data()
                 except cora.DatabaseError as e:
                     errorObj, = e.args
-                    erroMessage = errorObj.message
+                    errorMessage = errorObj.message
                     success = 'false'
                     while success == 'false':
                         success, errorMessage = \
@@ -312,7 +312,7 @@ class PRW_Data_Opvrager:
 
         # Writing the data to excel sheets
         with pd.ExcelWriter(output_file_dir, engine='openpyxl', mode='w') as writer:
-            df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen')
+            df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen', index=False)
             
             column = 0
             for pbs in df_meetgegevens['PEILBUIS'].unique():
@@ -323,9 +323,9 @@ class PRW_Data_Opvrager:
                 df_temp = df_temp.set_index('DATUM_METING') 
                 df_temp.columns = columnIndex
                 df_temp.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcol=column)
-                column = column + 5
+                column = column + 4
             
-            df_pbStats.to_excel(writer, sheet_name='Peilbuizen Statistiek')
+            df_pbStats.to_excel(writer, sheet_name='Peilbuizen Statistiek', index=False)
 
         # Start the excel file
         os.startfile(output_file_dir)     
@@ -519,6 +519,9 @@ class PRW_Data_Opvrager:
         df_stats['eind'] = pd.to_datetime(df_stats['eind'], format=dateformat)
 
         # Round all 'float' columns to the desired number of decimals
-        df_stats = df_stats.round(decimals)   
+        df_stats = df_stats.round(decimals)
+
+        df_stats.set_index('PEILBUIS')
         
-        return df_stats
+        # Return transposed dataframe
+        return df_stats.T
