@@ -251,6 +251,7 @@ class PRW_Data_Opvrager:
             self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
             self.dsn = cora.makedsn(host, port, service_name=self.database)
             print(self.password)
+            print(type(self.password))
             # If there is no value for the password or username stored in the settings
             # Qgis returns a NULL Qvariant which is not automatically translated to the None syntax of python
             if isinstance(self.username, QVariant):
