@@ -294,7 +294,12 @@ class PRW_Data_Opvrager:
         pbs_ids = self.get_pbs_ids(self.selected_layer)
         df_pbs = self.get_peilbuizen(pbs_ids)
         df_meetgegevens = self.get_meetgegevens(pbs_ids)
+        df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],columns=['Maaiveld', 'Bovenkant Peilbuis', 'Onderkant Filter', 'Bovenkant Filter'])
+        df_pbStats_pbs[['Maaiveld', 'Bovenkant Peilbuis']] = df_pbs[['HOOGTE_MAAIVELD','HOOGTE_BOV_BUIS']]
+        df_pbStats_pbs['Onderkant Filter'] = df_pbs['HOOGTE_MAAIVELD'] - df_pbs['LENGTE_BUIS']
+        df_pbStats_pbs['Bovenkant Filter'] = df_pbs['HOOGTE_MAAIVELD'] - df_pbs['LENGTE_BUIS'] + df_pbs['BOVENKANT_FILTER'])
         df_pbStats = self.PbStats(df_meetgegevens)
+        df_pbStats_pbs = pd.concat(df_pbStats_pbs.T, df_pbStats)
 
         # Check if the directory has to be created.
         if os.path.isdir(self.outputLocation) == False:
@@ -325,7 +330,7 @@ class PRW_Data_Opvrager:
                 df_temp.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcol=column)
                 column = column + 4
             
-            df_pbStats.to_excel(writer, sheet_name='Peilbuizen Statistiek', index=False)
+            df_pbStats_pbs.to_excel(writer, sheet_name='Peilbuizen Statistiek')
 
         # Start the excel file
         os.startfile(output_file_dir)     
