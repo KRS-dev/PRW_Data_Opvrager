@@ -344,13 +344,21 @@ class PRW_Data_Opvrager:
                 chart.add_series({
                     'name':         ['PRW_Peilbuis_Meetgegevens', 0, col + 1],
                     'categories':   ['PRW_Peilbuis_Meetgegevens', 3, col, N + 3, col],
-                    'values':       ['PRW_Peilbuis_Meetgegevens', 3, col + 2, N + 3, col + 2]
+                    'values':       ['PRW_Peilbuis_Meetgegevens', 3, col + 2, N + 3, col + 2],
+                    'marker':       {'type': 'automatic'},
                 })
                 
                 col = col + 4
-
-            chart.set_x_axis({'name': 'Index'})
-            chart.set_y_axis({'name': 'Value', 'major_gridlines': {'visible': False}})
+            
+            minGWS = min(df_meetgegevens['MEETWAARDE'])
+            chart.set_x_axis({
+                'name': 'Datum ',
+                'date_axis':        True,
+                'major_tick_mark':  'inside',
+                'minor_tick_mark':  'none',
+                'crossing':         minGWS -.5
+            })
+            chart.set_y_axis({'name': 'Grondwaterstand in mNAP', 'major_gridlines': {'visible': True}})
             chartsheet = workbook.add_chartsheet('Peilbuis Grafiek')
             chartsheet.set_chart(chart)
 
