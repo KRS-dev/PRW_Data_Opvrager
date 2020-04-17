@@ -291,18 +291,19 @@ class PRW_Data_Opvrager:
     
     def get_data(self):
         '''Fetch data and write it off to an excel file in the selected file location.'''
-        pbs_ids = self.get_pbs_ids(self.selected_layer)
-        df_pbs = self.get_peilbuizen(pbs_ids)
-        df_meetgegevens = self.get_meetgegevens(pbs_ids)
+        pbs_ids         =   self.get_pbs_ids(self.selected_layer)
+        df_pbs          =   self.get_peilbuizen(pbs_ids)
+        df_meetgegevens =   self.get_meetgegevens(pbs_ids)
         
-        ond_filt  = df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values
-        bov_filt = df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
+        ond_filt    =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values
+        bov_filt    =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
+        
         df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],
-            columns=['Maaiveld', 'Bovenkant Peilbuis', 'Onderkant Filter', 'Bovenkant Filter'],
-            data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, ond_filt, bov_filt))
-        #df_pbStats_pbs['Bovenkant Filter'].values 
-        #df_pbStats_pbs['Onderkant Filter'].values 
+            columns=['Maaiveld', 'Bovenkant Peilbuis', 'Bovenkant Filter', 'Onderkant Filter'],
+            data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, bov_filt, ond_filt))
+        
         df_pbStats = self.PbStats(df_meetgegevens)
+
         df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
 
         # Check if the directory has to be created.
@@ -320,10 +321,16 @@ class PRW_Data_Opvrager:
             output_file_dir = os.path.join(self.outputLocation, name + '{}.'.format(i) + ext)
 
         # Writing the data to excel sheets
-        with pd.ExcelWriter(output_file_dir, engine='openpyxl', mode='w') as writer:
-            df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen', index=False)
+        with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w', 
+                            datetime_format='mmm d yyyy', 
+                            date_format='mmmm dd yyyy') as writer:
+            workbook = writer.book
             
-            column = 0
+            df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen', index=False, freeze_panes=(1,2))
+            
+            chart = workbook.add_chart({'type':'line'})
+            
+            col = 0
             for pbs in df_meetgegevens['PEILBUIS'].unique():
                 df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
                 df_temp = df_temp[['DATUM_METING', 'WNC_CODE','MEETWAARDE']]
@@ -331,10 +338,23 @@ class PRW_Data_Opvrager:
                 columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PEILBUIS', 'MEETGEGEVENS'])
                 df_temp = df_temp.set_index('DATUM_METING') 
                 df_temp.columns = columnIndex
-                df_temp.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcol=column)
-                column = column + 4
-            
-            df_pbStats_pbs.to_excel(writer, sheet_name='Peilbuizen Statistiek')
+                df_temp.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcol=col)
+                
+                N = len(df_temp.index)
+                chart.add_series({
+                    'name':         ['PRW_Peilbuis_Meetgegevens', 0, col + 1],
+                    'categories':   ['PRW_Peilbuis_Meetgegevens', 3, col, N + 3, col],
+                    'values':       ['PRW_Peilbuis_Meetgegevens', 3, col + 2, N + 3, col + 2]
+                })
+                
+                col = col + 4
+
+            chart.set_x_axis({'name': 'Index'})
+            chart.set_y_axis({'name': 'Value', 'major_gridlines': {'visible': False}})
+            chartsheet = workbook.add_chartsheet('Peilbuis Grafiek')
+            chartsheet.set_chart(chart)
+
+            df_pbStats_pbs.to_excel(writer, sheet_name='Peilbuizen Statistiek', freeze_panes=(1,1))
 
         # Start the excel file
         os.startfile(output_file_dir)     
@@ -423,7 +443,6 @@ class PRW_Data_Opvrager:
                         query = 'SELECT id, buiscode||\'-\'||p.volgnummer PEILBUIS, buiscode_project, inw_diameter, hoogte_meetmerk, nul_meting, hoogte_maaiveld, bovenkant_filter, lengte_buis, hoogte_bov_buis, toel_afwijking, btp_code, meetmerk, plaatsbepaling, datum_start, datum_eind, datum_vervallen, ind_plaatsing, x_coordinaat, y_coordinaat, last_updated_by, last_update_date, created_by, creation_date, mat_code, geometrie '\
                             + 'FROM prw.prw_peilbuizen p '\
                             + 'WHERE id IN ({})'.format(','.join(bindValues))
-                        print(query)
                         fetched, description = self.fetch(query, values)
                         if (0 < len(fetched)):
                             pbs_df = pd.DataFrame(fetched)
@@ -499,8 +518,8 @@ class PRW_Data_Opvrager:
         print('Calculating statistics on all locations.')
 
         # Create empty dataframe with all desired statistics
-        df_stats = pd.DataFrame(columns=['PEILBUIS', 'max', 'p95', 'p90', 'p70', 'avg', 'p30',
-                                        'p10', 'p05', 'min', 'count', 'start', 'eind'], dtype='float')
+        df_stats = pd.DataFrame(columns=['PEILBUIS','Aantal metingen', 'Start datum', 'Eind datum', 'Maximaal gemeten', '95-percentiel', 'Gemiddelde',
+                                        '5-percentiel', 'Minimaal gemeten'], dtype='float')
         
         df_stats['PEILBUIS'] = df_in['PEILBUIS'].unique()  # Add all points to dataframe
         # WARNING: at this point, the datatypes are 'float', which is NOT desired for the date fields
@@ -509,25 +528,21 @@ class PRW_Data_Opvrager:
         for i, row in df_stats.iterrows():
             pb = row['PEILBUIS']      # Current location
             df2 = df_in.loc[df_in['PEILBUIS']==pb]         # Select part of full dataframe to calculate statistics
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['max']]     = df2['MEETWAARDE'].max()
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['p95']]     = df2['MEETWAARDE'].quantile(0.95)
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['p90']]     = df2['MEETWAARDE'].quantile(0.9)
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['p70']]     = df2['MEETWAARDE'].quantile(0.7)
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['avg']]     = df2['MEETWAARDE'].mean()
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['p30']]     = df2['MEETWAARDE'].quantile(0.3)
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['p10']]     = df2['MEETWAARDE'].quantile(0.1)
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['p05']]     = df2['MEETWAARDE'].quantile(0.05)
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['min']]     = df2['MEETWAARDE'].min()
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['count']]   = df2['MEETWAARDE'].count()
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['start']]   = df2['DATUM_METING'].min()
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['eind']]    = df2['DATUM_METING'].max()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['Maximaal gemetenx']]   = df2['MEETWAARDE'].max()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['95-percentiel']]       = df2['MEETWAARDE'].quantile(0.95)
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['Gemiddelde']]          = df2['MEETWAARDE'].mean()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['5-percentiel']]        = df2['MEETWAARDE'].quantile(0.05)
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['Minimaal gemeten']]    = df2['MEETWAARDE'].min()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['Aantal metingen']]     = df2['MEETWAARDE'].count()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['Start datum']]         = df2['DATUM_METING'].min()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['Eind datum']]          = df2['DATUM_METING'].max()
             
         # Conversion to desired formates
-        df_stats['count'] = df_stats['count'].astype(int)
+        df_stats['Aantal metingen'] = df_stats['Aantal metingen'].astype(int)
         
         dateformat = '%Y-%m-%d %H:%M:%S'
-        df_stats['start'] = pd.to_datetime(df_stats['start'], format=dateformat)
-        df_stats['eind'] = pd.to_datetime(df_stats['eind'], format=dateformat)
+        df_stats['Start datum'] = pd.to_datetime(df_stats['Start datum'], format=dateformat)
+        df_stats['Eind datum'] = pd.to_datetime(df_stats['Eind datum'], format=dateformat)
 
         # Round all 'float' columns to the desired number of decimals
         df_stats = df_stats.round(decimals)
