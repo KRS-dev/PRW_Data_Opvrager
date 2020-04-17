@@ -296,10 +296,9 @@ class PRW_Data_Opvrager:
         df_meetgegevens = self.get_meetgegevens(pbs_ids)
         df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],
             columns=['Maaiveld', 'Bovenkant Peilbuis', 'Onderkant Filter', 'Bovenkant Filter'],
-            data=df_pbs[['HOOGTE_MAAIVELD','HOOGTE_BOV_BUIS', 'LENGTE_BUIS','BOVENKANT_FILTER']])
-        df_pbStats_pbs[['Maaiveld', 'Bovenkant Peilbuis']] = df_pbs[['HOOGTE_MAAIVELD','HOOGTE_BOV_BUIS']]
-        df_pbStats_pbs['Onderkant Filter'] = df_pbs['HOOGTE_MAAIVELD'] - df_pbs['LENGTE_BUIS']
-        df_pbStats_pbs['Bovenkant Filter'] = df_pbs['HOOGTE_MAAIVELD'] - df_pbs['LENGTE_BUIS'] + df_pbs['BOVENKANT_FILTER']
+            data=df_pbs[['HOOGTE_MAAIVELD','HOOGTE_BOV_BUIS', 'LENGTE_BUIS','BOVENKANT_FILTER']].values)
+        df_pbStats_pbs['Onderkant Filter'] = df_pbs['HOOGTE_MAAIVELD'] - df_pbs['LENGTE_BUIS'].values
+        df_pbStats_pbs['Bovenkant Filter'] = df_pbs['HOOGTE_MAAIVELD'] - df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
         print(df_pbStats_pbs)
         df_pbStats = self.PbStats(df_meetgegevens)
         df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
