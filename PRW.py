@@ -297,14 +297,15 @@ class PRW_Data_Opvrager:
         '''Fetch data and write it off to an excel file in the selected file location.'''
         pbs_ids = self.get_pbs_ids(self.selected_layer)
         df_pbs = self.get_peilbuizen(pbs_ids)
-        #df_projecten = self.get_projecten(pbs_ids)
         df_meetgegevens = self.get_meetgegevens(pbs_ids)
-        # Check if the directory still has to be made.
+        df_pbStats = self.PbStats(df_meetgegevens)
+
+        # Check if the directory has to be created.
         if os.path.isdir(self.outputLocation) == False:
             os.mkdir(self.outputLocation)
 
         fileNameExt = self.fileName + '.xlsx'
-        # Check if the selected filename already exists in the dir
+        # Check if the selected filename exists in the dir
         output_file_dir = os.path.join(self.outputLocation, fileNameExt)
         if os.path.exists(output_file_dir):
             name, ext = fileNameExt.split('.')
@@ -316,19 +317,22 @@ class PRW_Data_Opvrager:
         # Writing the data to excel sheets
         with pd.ExcelWriter(output_file_dir, engine='openpyxl', mode='w') as writer:
             df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen')
-            #df_projecten.to_excel(writer, sheet_name='PRW_Projecten')
             
             column = 0
             for pbs_id in df_meetgegevens['PBS_ID'].unique():
                 pbs_id = int(pbs_id)
                 df_temp = df_meetgegevens[df_meetgegevens['PBS_ID'] == pbs_id]
-                df_temp = df_temp[['DATUM_METING', 'ID', 'WNC_CODE','MEETWAARDE']]
-                tuples = ((pbs_id, 'ID'), (pbs_id, 'WNC_CODE'), (pbs_id, 'MEETWAARDE'))
-                columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PBS_ID', 'MEETGEGEVENS'])
+                peilbuis = df_temp.at[0,'PEILBUIS']
+                df_temp = df_temp[['DATUM_METING', 'WNC_CODE','MEETWAARDE']]
+                tuples = ((peilbuis, 'WNC_CODE'), (peilbuis, 'MEETWAARDE'))
+                columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PEILBUIS', 'MEETGEGEVENS'])
                 df_temp = df_temp.set_index('DATUM_METING') 
                 df_temp.columns = columnIndex
                 df_temp.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcol=column)
                 column = column + 5
+            
+            df_pbStats.to_excel(writer, sheet_name='Peilbuizen Statistiek')
+
         # Start the excel file
         os.startfile(output_file_dir)
 
@@ -386,8 +390,7 @@ class PRW_Data_Opvrager:
             fetched = cur.fetchall()
             description = cur.description
             return fetched, description
-    
-    # Getting the loc_id's from the Qgislayer
+
     def get_pbs_ids(self, qgisLayer):
         '''Extract from the selected peilbuizen in the layer the id's.'''
         pbs_ids = []
@@ -405,7 +408,6 @@ class PRW_Data_Opvrager:
         else:
             raise KeyError('No features were selected in the layer')
 
-    # Querying peilbuizen tabel
     def get_peilbuizen(self, pbs_ids):
         '''Setting up the queries to fetch all data from the PRW_Peilbuizen table and processing the data as a pandas.DataFrame.'''
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
@@ -439,7 +441,12 @@ class PRW_Data_Opvrager:
             raise TypeError('Input is not a list or tuple')
     
     def get_meetgegevens(self, pbs_ids):
-        '''Setting up the queries to fetch all data from the PRW_Meetgegevens table and processing the data as a pandas.Dataframe.'''
+        '''This method sets up the queries to fetch all data from the PRW_Meetgegevens table.
+        It will processing the data as a pandas.Dataframe.
+        Argruments:
+        - PBS_ID's 
+        
+        '''
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
             if len(pbs_ids) > 0:
                 if(all(isinstance(x, int) for x in pbs_ids)):
@@ -453,10 +460,13 @@ class PRW_Data_Opvrager:
                         bindAll =  bindValues + bindDate
                         values = values + [self.dateMin, self.dateMax]
                         bindDict = dict(zip(bindAll, values))
-                        query = 'SELECT * FROM prw.prw_meetgegevens ' + \
-                            'WHERE datum_meting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
+                        query = 'SELECT mg.pbs_id, pb.buiscode||'-'||pb.volgnummer PEILBUIS, mg.wnc_code, mg.id, mg.datum_meting, mg.meetwaarde, mg.hoogte_meetmerk \
+                            FROM PRW.prw_meetgegevens mg \
+                            INNER JOIN PRW.prw_peilbuizen pb ON pb.id = mg.pbs_id;' + \
+                            'WHERE mg.datum_meting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
-                            'AND pbs_id IN ({})'.format(','.join(bindValues))
+                            'AND mg.pbs_id IN ({})'.format(','.join(bindValues))
+
                         fetched, description = self.fetch(query, bindDict)
                         if(len(fetched) > 0):
                             mtg_df = pd.DataFrame(fetched)
@@ -476,3 +486,49 @@ class PRW_Data_Opvrager:
                 raise ValueError('No pbs_ids were supplied.')
         else:
             raise TypeError('Input is not a list or tuple')
+    
+    def PbStats(self, df_in, decimals=2):
+        """This function creates standard statistics for datasets
+        Arguments:
+        - filename
+        - desired decimal places (default = 2)
+                
+        """
+        print('Calculating statistics on all locations.')
+
+        # Create empty dataframe with all desired statistics
+        df_stats = pd.DataFrame(columns=['PEILBUIS', 'max', 'p95', 'p90', 'p70', 'avg', 'p30',
+                                        'p10', 'p05', 'min', 'count', 'start', 'eind'], dtype='float')
+        
+        df_stats['PEILBUIS'] = df_in['PEILBUIS'].unique()  # Add all points to dataframe
+        # WARNING: at this point, the datatypes are 'float', which is NOT desired for the date fields
+            
+        # Loop over individual locations and fill the fields
+        for row in df_stats.iterrows():
+            pb = row['PEILBUIS']      # Current location
+            df2 = df_in.loc[df_in['PEILBUIS']==pb]         # Select part of full dataframe to calculate statistics
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['max']]     = df2['MEETWAARDE'].max()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['p95']]     = df2['MEETWAARDE'].quantile(0.95)
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['p90']]     = df2['MEETWAARDE'].quantile(0.9)
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['p70']]     = df2['MEETWAARDE'].quantile(0.7)
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['avg']]     = df2['MEETWAARDE'].mean()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['p30']]     = df2['MEETWAARDE'].quantile(0.3)
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['p10']]     = df2['MEETWAARDE'].quantile(0.1)
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['p05']]     = df2['MEETWAARDE'].quantile(0.05)
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['min']]     = df2['MEETWAARDE'].min()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['count']]   = df2['MEETWAARDE'].count()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['start']]   = df2['DATUM_METING'].min()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['eind']]    = df2['DATUM_METING'].max()
+            
+        # Conversion to desired formates
+        df_stats['count'] = df_stats['count'].astype(int)
+        
+        dateformat = '%Y-%m-%d %H:%M:%S'
+        df_stats['start'] = pd.to_datetime(df_stats['start'], format=dateformat)
+        df_stats['eind'] = pd.to_datetime(df_stats['eind'], format=dateformat)
+
+        # Round all 'float' columns to the desired number of decimals
+        df_stats = df_stats.round(decimals)   
+        
+        return df_stats
+        
