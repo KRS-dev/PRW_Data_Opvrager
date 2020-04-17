@@ -247,31 +247,26 @@ class PRW_Data_Opvrager:
             selected_databasekeys = [k for k in allkeys if databasekey in k]
             host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
             port = settings.value([k for k in selected_databasekeys if 'port' in k][0], 1521)
-            self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
-            self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
             self.dsn = cora.makedsn(host, port, service_name=self.database)
-            print(self.password, '\n')
-            print(type(self.password))
-            # If there is no value for the password or username stored in the settings
-            # Qgis returns a NULL Qvariant which is not automatically translated to the None syntax of python
-            if isinstance(self.username, QVariant):
-                if self.username.isNull():
-                    self.username = None
-            if isinstance(self.password, QVariant):
-                if self.password.isNull():
-                    self.password = None
-            print(self.username)
-            print(self.password)
+           
+            saveUsername = settings.value([k for k in selected_databasekeys if 'saveUsername' in k][0], False)
+            savePassword = settings.value([k for k in selected_databasekeys if 'savePassword' in k][0], False)
+            print(savePassword, saveUsername)
+            self.username = None
+            self.password = None
+            if saveUsername:
+                self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
+            if savePassword:
+                self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
+            
             errorMessage = None
             # If we have a username and password try to connect,
             # otherwise store error and show dialog screen for credentials input
-            if self.username is not None and self.password is not None:
+            if saveUsername and savePassword:
                 try:
-                    print('try')
                     self.check_connection()
                     self.get_data()
                 except cora.DatabaseError as e:
-                    print('except')
                     errorObj, = e.args
                     erroMessage = errorObj.message
                     success = 'false'
@@ -283,7 +278,6 @@ class PRW_Data_Opvrager:
                     elif success == 'true':
                         self.get_data()
             else:
-                print('else')
                 success, errorMessage = \
                     self.get_credentials(host, port, self.database, username=self.username, password=self.password)
                 while success == 'false':
@@ -502,7 +496,7 @@ class PRW_Data_Opvrager:
         # WARNING: at this point, the datatypes are 'float', which is NOT desired for the date fields
             
         # Loop over individual locations and fill the fields
-        for row in df_stats.iterrows():
+        for i, row in df_stats.iterrows():
             pb = row['PEILBUIS']      # Current location
             df2 = df_in.loc[df_in['PEILBUIS']==pb]         # Select part of full dataframe to calculate statistics
             df_stats.loc[df_stats['PEILBUIS']==pb, ['max']]     = df2['MEETWAARDE'].max()
