@@ -350,15 +350,22 @@ class PRW_Data_Opvrager:
                 
                 col = col + 4
             
-            minGWS = min(df_meetgegevens['MEETWAARDE'])
+            minGWS = float(min(df_meetgegevens['MEETWAARDE']))
             chart.set_x_axis({
                 'name': 'Datum ',
+                'name_font': {'size': 14, 'bold': True},
                 'date_axis':        True,
                 'major_tick_mark':  'inside',
                 'minor_tick_mark':  'none',
-                'crossing':         minGWS -.5
+                'crossing':         minGWS - 1
             })
-            chart.set_y_axis({'name': 'Grondwaterstand in mNAP', 'major_gridlines': {'visible': True}})
+            chart.set_y_axis({
+                'name': 'Grondwaterstand in mNAP',
+                'name_font': {'size': 14, 'bold': True},
+                'major_gridlines': {'visible': True}
+                })
+            chart.set_size({'x_scale': 2, 'y_scale': 1.5})
+            chart.set_legend({'font': {'size': 12, 'bold': True}})
             chartsheet = workbook.add_chartsheet('Peilbuis Grafiek')
             chartsheet.set_chart(chart)
 
