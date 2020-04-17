@@ -528,7 +528,7 @@ class PRW_Data_Opvrager:
         for i, row in df_stats.iterrows():
             pb = row['PEILBUIS']      # Current location
             df2 = df_in.loc[df_in['PEILBUIS']==pb]         # Select part of full dataframe to calculate statistics
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['Maximaal gemetenx']]   = df2['MEETWAARDE'].max()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['Maximaal gemeten']]   = df2['MEETWAARDE'].max()
             df_stats.loc[df_stats['PEILBUIS']==pb, ['95-percentiel']]       = df2['MEETWAARDE'].quantile(0.95)
             df_stats.loc[df_stats['PEILBUIS']==pb, ['Gemiddelde']]          = df2['MEETWAARDE'].mean()
             df_stats.loc[df_stats['PEILBUIS']==pb, ['5-percentiel']]        = df2['MEETWAARDE'].quantile(0.05)
