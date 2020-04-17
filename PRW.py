@@ -383,7 +383,7 @@ class PRW_Data_Opvrager:
             except cora.DatabaseError as e:
                 errorObj, = e.args
                 errorMessage = errorObj.message
-                print(errorMessage)
+                raise e(errorMessage)
             fetched = cur.fetchall()
             description = cur.description
             return fetched, description
@@ -416,7 +416,7 @@ class PRW_Data_Opvrager:
                     for chunk in chunks:
                         values = chunk
                         bindValues = [':' + str(i+1) for i in range(len(values))]
-                        query = 'SELECT id, buiscode||\'-\'||p.volgnummer PEILBUIS, buiscode_project, inw_diameter, hoogte_meetmerk, nul_meeting, hoogte_maaiveld, bovenkant_filter, lengte_buis, hoogte_bov_buis, toel_afwijking, btp_code, meetmerk, plaatsbepaling, datum_start, datum_eind, datum_vervallen, ind_plaatsing, x_coordinaat, y_coordinaat, last_updated_by, last_update_date, created_by, creation_date, mat_code, geometrie '\
+                        query = 'SELECT id, buiscode||\'-\'||p.volgnummer PEILBUIS, buiscode_project, inw_diameter, hoogte_meetmerk, nul_meting, hoogte_maaiveld, bovenkant_filter, lengte_buis, hoogte_bov_buis, toel_afwijking, btp_code, meetmerk, plaatsbepaling, datum_start, datum_eind, datum_vervallen, ind_plaatsing, x_coordinaat, y_coordinaat, last_updated_by, last_update_date, created_by, creation_date, mat_code, geometrie '\
                             + 'FROM prw.prw_peilbuizen p '\
                             + 'WHERE id IN ({})'.format(','.join(bindValues))
                         print(query)
