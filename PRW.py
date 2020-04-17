@@ -416,7 +416,7 @@ class PRW_Data_Opvrager:
                     for chunk in chunks:
                         values = chunk
                         bindValues = [':' + str(i+1) for i in range(len(values))]
-                        query = 'SELECT ID, BUISCODE||\'-\'||VOLGNUMMER PEILBUIS, BUISCODE_PROJECT, INW_DIAMETER, HOOGTE_MEETMERK, NUL_MEETING, HOOGTE_MAAIVELD, BOVENKANT_FILTER, LENGTE_BUIS, HOOGTE_BOV_BUIS, TOEL_AFWIJKING, BTP_CODE, MEETMERK, PLAATSBEPALING, DATUM_START, DATUM_EIND, DATUM_VERVALLEN, IND_PLAATSING, X_COORDINAAT, Y_COORDINAAT, LAST_UPDATED_BY, LAST_UPDATE_DATE, CREATED_BY, CREATION_DATE, MAT_CODE, GEOMETRIE '\
+                        query = 'SELECT id, buiscode||\'-\'||volgnummer peilbuis, buiscode_project, inw_diameter, hoogte_meetmerk, nul_meeting, hoogte_maaiveld, bovenkant_filter, lengte_buis, hoogte_bov_buis, toel_afwijking, btp_code, meetmerk, plaatsbepaling, datum_start, datum_eind, datum_vervallen, ind_plaatsing, x_coordinaat, y_coordinaat, last_updated_by, last_update_date, created_by, creation_date, mat_code, geometrie '\
                             + 'FROM prw.prw_peilbuizen '\
                             + 'WHERE id IN ({})'.format(','.join(bindValues))
                         fetched, description = self.fetch(query, values)
