@@ -416,9 +416,10 @@ class PRW_Data_Opvrager:
                     for chunk in chunks:
                         values = chunk
                         bindValues = [':' + str(i+1) for i in range(len(values))]
-                        query = 'SELECT p.id, p.buiscode||\'-\'||p.volgnummer PEILBUIS, p.buiscode_project, p.inw_diameter, p.hoogte_meetmerk, p.nul_meeting, p.hoogte_maaiveld, p.bovenkant_filter, p.lengte_buis, p.hoogte_bov_buis, p.toel_afwijking, p.btp_code, p.meetmerk, p.plaatsbepaling, p.datum_start, p.datum_eind, p.datum_vervallen, p.ind_plaatsing, p.x_coordinaat, p.y_coordinaat, p.last_updated_by, p.last_update_date, p.created_by, p.creation_date, p.mat_code, p.geometrie '\
+                        query = 'SELECT id, buiscode||\'-\'||p.volgnummer PEILBUIS, buiscode_project, inw_diameter, hoogte_meetmerk, nul_meeting, hoogte_maaiveld, bovenkant_filter, lengte_buis, hoogte_bov_buis, toel_afwijking, btp_code, meetmerk, plaatsbepaling, datum_start, datum_eind, datum_vervallen, ind_plaatsing, x_coordinaat, y_coordinaat, last_updated_by, last_update_date, created_by, creation_date, mat_code, geometrie '\
                             + 'FROM prw.prw_peilbuizen p '\
                             + 'WHERE id IN ({})'.format(','.join(bindValues))
+                        print(query)
                         fetched, description = self.fetch(query, values)
                         if (0 < len(fetched)):
                             pbs_df = pd.DataFrame(fetched)
