@@ -521,7 +521,7 @@ class PRW_Data_Opvrager:
         # Round all 'float' columns to the desired number of decimals
         df_stats = df_stats.round(decimals)
 
-        df_stats.set_index('PEILBUIS')
-        
+        df_stats = df_stats.set_index('PEILBUIS')
+
         # Return transposed dataframe
         return df_stats.T
