@@ -250,7 +250,7 @@ class PRW_Data_Opvrager:
             self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
             self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
             self.dsn = cora.makedsn(host, port, service_name=self.database)
-            print(self.password)
+            print(self.password, '\n')
             print(type(self.password))
             # If there is no value for the password or username stored in the settings
             # Qgis returns a NULL Qvariant which is not automatically translated to the None syntax of python
@@ -274,7 +274,7 @@ class PRW_Data_Opvrager:
                     print('except')
                     errorObj, = e.args
                     erroMessage = errorObj.message
-                    success = None
+                    success = 'false'
                     while success == 'false':
                         success, errorMessage = \
                             self.get_credentials(host, port, self.database, message=errorMessage)
@@ -335,9 +335,7 @@ class PRW_Data_Opvrager:
             df_pbStats.to_excel(writer, sheet_name='Peilbuizen Statistiek')
 
         # Start the excel file
-        os.startfile(output_file_dir)
-
-        
+        os.startfile(output_file_dir)     
 
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
         '''Show a credentials dialog form to access the database. Checks credentials when clicked ok.'''
@@ -463,7 +461,7 @@ class PRW_Data_Opvrager:
                         bindDict = dict(zip(bindAll, values))
                         query = 'SELECT mg.pbs_id, pb.buiscode||\'-\'||pb.volgnummer PEILBUIS, mg.wnc_code, mg.id, mg.datum_meting, mg.meetwaarde, mg.hoogte_meetmerk ' +\
                             'FROM PRW.prw_meetgegevens mg ' + \
-                            'INNER JOIN PRW.prw_peilbuizen pb ON pb.id = mg.pbs_id' + \
+                            'INNER JOIN PRW.prw_peilbuizen pb ON pb.id = mg.pbs_id ' + \
                             'WHERE mg.datum_meting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
                             'AND mg.pbs_id IN ({})'.format(','.join(bindValues))
