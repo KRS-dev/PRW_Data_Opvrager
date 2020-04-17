@@ -299,7 +299,7 @@ class PRW_Data_Opvrager:
         bov_filt = df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
         df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],
             columns=['Maaiveld', 'Bovenkant Peilbuis', 'Onderkant Filter', 'Bovenkant Filter'],
-            data=[df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, ond_filt, bov_filt].T)
+            data=[[df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, ond_filt, bov_filt]])
         #df_pbStats_pbs['Bovenkant Filter'].values 
         #df_pbStats_pbs['Onderkant Filter'].values 
         df_pbStats = self.PbStats(df_meetgegevens)
