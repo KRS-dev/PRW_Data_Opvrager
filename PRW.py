@@ -251,12 +251,14 @@ class PRW_Data_Opvrager:
            
             saveUsername = settings.value([k for k in selected_databasekeys if 'saveUsername' in k][0], False)
             savePassword = settings.value([k for k in selected_databasekeys if 'savePassword' in k][0], False)
-            print(savePassword, saveUsername)
+            print(type(savePassword), saveUsername)
             self.username = None
             self.password = None
-            if saveUsername:
+            if saveUsername == true:
+                saveUsername = True
                 self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
-            if savePassword:
+            if savePassword == true:
+                savePassword = False
                 self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
             
             errorMessage = None
