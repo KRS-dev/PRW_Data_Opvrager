@@ -262,7 +262,7 @@ class PRW_Data_Opvrager:
             errorMessage = None
             # If we have a username and password try to connect,
             # otherwise store error and show dialog screen for credentials input
-            if saveUsername and savePassword:
+            if saveUsername is True and savePassword is True:
                 try:
                     self.check_connection()
                     self.get_data()
