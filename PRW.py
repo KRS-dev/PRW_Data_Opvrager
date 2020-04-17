@@ -460,9 +460,9 @@ class PRW_Data_Opvrager:
                         bindAll =  bindValues + bindDate
                         values = values + [self.dateMin, self.dateMax]
                         bindDict = dict(zip(bindAll, values))
-                        query = 'SELECT mg.pbs_id, pb.buiscode||'-'||pb.volgnummer PEILBUIS, mg.wnc_code, mg.id, mg.datum_meting, mg.meetwaarde, mg.hoogte_meetmerk \
-                            FROM PRW.prw_meetgegevens mg \
-                            INNER JOIN PRW.prw_peilbuizen pb ON pb.id = mg.pbs_id;' + \
+                        query = 'SELECT mg.pbs_id, pb.buiscode||'-'||pb.volgnummer PEILBUIS, mg.wnc_code, mg.id, mg.datum_meting, mg.meetwaarde, mg.hoogte_meetmerk ' +\
+                            'FROM PRW.prw_meetgegevens mg ' + \
+                            'INNER JOIN PRW.prw_peilbuizen pb ON pb.id = mg.pbs_id' + \
                             'WHERE mg.datum_meting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
                             'AND mg.pbs_id IN ({})'.format(','.join(bindValues))
@@ -531,4 +531,3 @@ class PRW_Data_Opvrager:
         df_stats = df_stats.round(decimals)   
         
         return df_stats
-        
