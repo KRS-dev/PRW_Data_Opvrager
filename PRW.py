@@ -316,12 +316,10 @@ class PRW_Data_Opvrager:
             df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen')
             
             column = 0
-            for pbs_id in df_meetgegevens['PBS_ID'].unique():
-                pbs_id = int(pbs_id)
-                df_temp = df_meetgegevens[df_meetgegevens['PBS_ID'] == pbs_id]
-                peilbuis = df_temp.at[0,'PEILBUIS']
+            for pbs in df_meetgegevens['PEILBUIS'].unique():
+                df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
                 df_temp = df_temp[['DATUM_METING', 'WNC_CODE','MEETWAARDE']]
-                tuples = ((peilbuis, 'WNC_CODE'), (peilbuis, 'MEETWAARDE'))
+                tuples = ((pbs, 'WNC_CODE'), (pbs, 'MEETWAARDE'))
                 columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PEILBUIS', 'MEETGEGEVENS'])
                 df_temp = df_temp.set_index('DATUM_METING') 
                 df_temp.columns = columnIndex
