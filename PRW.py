@@ -298,8 +298,9 @@ class PRW_Data_Opvrager:
         df_pbStats_pbs[['Maaiveld', 'Bovenkant Peilbuis']] = df_pbs[['HOOGTE_MAAIVELD','HOOGTE_BOV_BUIS']]
         df_pbStats_pbs['Onderkant Filter'] = df_pbs['HOOGTE_MAAIVELD'] - df_pbs['LENGTE_BUIS']
         df_pbStats_pbs['Bovenkant Filter'] = df_pbs['HOOGTE_MAAIVELD'] - df_pbs['LENGTE_BUIS'] + df_pbs['BOVENKANT_FILTER']
+        print(df_pbStats_pbs)
         df_pbStats = self.PbStats(df_meetgegevens)
-        df_pbStats_pbs = pd.concat([df_pbStats_pbs.T, df_pbStats])
+        df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
 
         # Check if the directory has to be created.
         if os.path.isdir(self.outputLocation) == False:
@@ -531,4 +532,4 @@ class PRW_Data_Opvrager:
         df_stats = df_stats.set_index('PEILBUIS')
 
         # Return transposed dataframe
-        return df_stats.T
+        return df_stats
