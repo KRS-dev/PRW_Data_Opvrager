@@ -212,8 +212,10 @@ class PRW_Data_Opvrager:
         allkeys = settings.allKeys()
         databases = [k for k in allkeys if 'database' in k]
         databaseNames = [settings.value(k) for k in databases]
+        cur_i = self.dlg.DatabaseComboBox.currentIndex()
         self.dlg.DatabaseComboBox.clear()
-        self.dlg.DatabaseComboBox.addItems(databaseNames) 
+        self.dlg.DatabaseComboBox.addItems(databaseNames)
+        self.dlg.DatabaseComboBox.setCurrentIndex(cur_i)
 
         # show the dialog
         self.dlg.show()
@@ -249,8 +251,8 @@ class PRW_Data_Opvrager:
             port = settings.value([k for k in selected_databasekeys if 'port' in k][0], 1521)
             self.dsn = cora.makedsn(host, port, service_name=self.database)
            
-            saveUsername = settings.value([k for k in selected_databasekeys if 'saveUsername' in k][0], False)
-            savePassword = settings.value([k for k in selected_databasekeys if 'savePassword' in k][0], False)
+            saveUsername = settings.value([k for k in selected_databasekeys if 'saveUsername' in k][0], None)
+            savePassword = settings.value([k for k in selected_databasekeys if 'savePassword' in k][0], None)
             self.username = None
             self.password = None
             if saveUsername == 'true':
@@ -357,7 +359,7 @@ class PRW_Data_Opvrager:
                 'date_axis':        True,
                 'major_tick_mark':  'inside',
                 'minor_tick_mark':  'none',
-                'crossing':         minGWS - 1
+                'crossing':         minGWS
             })
             chart.set_y_axis({
                 'name': 'Grondwaterstand in mNAP',
@@ -380,7 +382,7 @@ class PRW_Data_Opvrager:
 
         uri.setConnection(host, port, database, username, password)
         connInfo = uri.connectionInfo()
-        print('get_credentials')
+
         errorMessage = None
         (ok, user, passwd) = QgsCredentials.instance().get(connInfo, username, password, message)
         if ok:
