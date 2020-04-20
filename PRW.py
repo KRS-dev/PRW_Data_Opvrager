@@ -208,14 +208,18 @@ class PRW_Data_Opvrager:
             self.dlg.OutputLocation.setStorageMode(1)
             self.dlg.OutputLocation.setFilePath(self.dlg.OutputLocation.defaultRoot())
 
+        # Look for all connected databases in Qgis
         settings = QSettings()
         allkeys = settings.allKeys()
         databases = [k for k in allkeys if 'database' in k]
         databaseNames = [settings.value(k) for k in databases]
+        # Holding on to the previous current index 
         cur_i = self.dlg.DatabaseComboBox.currentIndex()
         self.dlg.DatabaseComboBox.clear()
         self.dlg.DatabaseComboBox.addItems(databaseNames)
-        self.dlg.DatabaseComboBox.setCurrentIndex(cur_i)
+        # On first_start there would be no previous current index and currentIndex would return -1
+        if cur_i != -1:
+            self.dlg.DatabaseComboBox.setCurrentIndex(cur_i)
 
         # show the dialog
         self.dlg.show()
