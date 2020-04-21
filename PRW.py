@@ -267,8 +267,8 @@ class PRW_Data_Opvrager:
                 self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
             
             errorMessage = None
-            # If we have a username and password try to connect,
-            # otherwise store error and show dialog screen for credentials input
+            # If we have a username and password try to connect, otherwise ask for credentials
+            # if the connection fails store the error and show dialog screen for credentials input
             if saveUsername is True and savePassword is True:
                 try:
                     self.check_connection()
@@ -297,18 +297,18 @@ class PRW_Data_Opvrager:
     
     def get_data(self):
         '''Fetch data and write it off to an excel file in the selected file location.'''
+        # Use the fetch functions to collect all the data
         pbs_ids         =   self.get_pbs_ids(self.selected_layer)
         df_pbs          =   self.get_peilbuizen(pbs_ids)
         df_meetgegevens =   self.get_meetgegevens(pbs_ids)
+        # Calculate the statistics of the meetgegevens.
         df_pbStats      =   self.PbStats(df_meetgegevens)
-        
+        # Present the statistics with some peilbuis gegevens
         ond_filt    =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values
         bov_filt    =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
-        
         df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],
             columns=['Maaiveld', 'Bovenkant Peilbuis', 'Bovenkant Filter', 'Onderkant Filter'],
             data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, bov_filt, ond_filt))
-
         df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
 
         # Check if the directory has to be created.
@@ -334,7 +334,8 @@ class PRW_Data_Opvrager:
             df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen', index=False, freeze_panes=(1,2))
             
             chart = workbook.add_chart({'type':'line'})
-            
+
+            # Adding all meetgegevens series to a chart
             col = 0
             for pbs in df_meetgegevens['PEILBUIS'].unique():
                 df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
@@ -355,6 +356,7 @@ class PRW_Data_Opvrager:
                 
                 col = col + 4
             
+            # Chart formatting
             minGWS = float(min(df_meetgegevens['MEETWAARDE']))
             chart.set_x_axis({
                 'name': 'Datum ',
@@ -382,16 +384,16 @@ class PRW_Data_Opvrager:
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
         '''Show a credentials dialog form to access the database. Checks credentials when clicked ok.'''
         uri = QgsDataSourceUri()
-
         uri.setConnection(host, port, database, username, password)
         connInfo = uri.connectionInfo()
 
         errorMessage = None
+        # Pops up a Credentials dialog, ok returns True if 'ok' on the dialog is pressed
         (ok, user, passwd) = QgsCredentials.instance().get(connInfo, username, password, message)
         if ok:
             self.username = user
             self.password = passwd
-            # check if connection works otherwise return 'false'
+            # check if connection works otherwise return 'false' and the error message
             try:
                 self.check_connection()
                 return 'true', errorMessage
@@ -443,12 +445,12 @@ class PRW_Data_Opvrager:
                 try:
                     pbs_ids.append(f.attribute('ID'))
                 except KeyError:
-                    self.iface.messageBar().pushMessage("Error", 'This layer does not contain an attribute called \'ID\'.', level=Qgis.Critical)
+                    self.iface.messageBar().pushMessage("Error", 'This layer does not contain an attribute called \'ID\'.', level=Qgis.Critical, duration=10)
                     raise KeyError(
                         'This layer does not contain an attribute called \'ID\'.')
             return pbs_ids
         else:
-            self.iface.messageBar().pushMessage("Error", 'No features were selected in the layer.', level=Qgis.Critical)
+            self.iface.messageBar().pushMessage("Error", 'No features were selected in the layer.', level=Qgis.Critical, duration=10)
             raise KeyError('No features were selected in the layer.')
 
     def get_peilbuizen(self, pbs_ids):
@@ -457,11 +459,17 @@ class PRW_Data_Opvrager:
             if len(pbs_ids) > 0:
                 if(all(isinstance(x, int) for x in pbs_ids)):
                     val = list(pbs_ids)
+
+                    # Bindvalues are used in the queries to prevent SQL-injection. 
+                    # Queries with more than 1000 bindvalues raise an error in cx_Oracle, robustness is built in by creating chunks
+                    # More info about bindvalues can be found in the cx_Oracle docs.
                     chunks = [val[x:x+1000] for x in range(0, len(val), 1000)]
                     df_list = []
                     for chunk in chunks:
                         values = chunk
-                        bindValues = [':' + str(i+1) for i in range(len(values))]
+                        bindValues = [':' + str(i+1) for i in range(len(values))] # Creates bindvalues list as [:1, :2, :3, ...]
+                        
+                        # Bindvalues are directly injected into the query.
                         query = 'SELECT id, buiscode||\'-\'||p.volgnummer PEILBUIS, buiscode_project, inw_diameter, hoogte_meetmerk, nul_meting, hoogte_maaiveld, bovenkant_filter, lengte_buis, hoogte_bov_buis, toel_afwijking, btp_code, meetmerk, plaatsbepaling, datum_start, datum_eind, datum_vervallen, ind_plaatsing, x_coordinaat, y_coordinaat, last_updated_by, last_update_date, created_by, creation_date, mat_code, geometrie '\
                             + 'FROM prw.prw_peilbuizen p '\
                             + 'WHERE id IN ({})'.format(','.join(bindValues))
@@ -471,11 +479,13 @@ class PRW_Data_Opvrager:
                             colnames = [desc[0] for desc in description]
                             pbs_df.columns = colnames
                             df_list.append(pbs_df)
+                    
+                    # If df_list contains any dataframes
                     if df_list:
                         pbs_df_all = pd.concat(df_list, ignore_index=True)
                         return pbs_df_all
                     else:
-                        self.iface.messageBar().pushMessage("Error", 'These selected GBS_ID\'s do not contain any valid: ' + str(val), level=Qgis.Critical)
+                        self.iface.messageBar().pushMessage("Error", 'These selected GBS_ID\'s do not contain any valid: ' + str(val), level=Qgis.Critical, duration=10)
                         raise ValueError(
                             'These selected GBS_ID\'s do not contain any valid: ' + str(val))
                 else:
@@ -496,15 +506,23 @@ class PRW_Data_Opvrager:
             if len(pbs_ids) > 0:
                 if(all(isinstance(x, int) for x in pbs_ids)):
                     val = list(pbs_ids)
+                    
+                    # Bindvalues are used in the queries to prevent SQL-injection. 
+                    # Queries with more than 1000 bindvalues raise an error in cx_Oracle, robustness is built in by creating chunks
+                    # More info about bindvalues can be found in the cx_Oracle docs.
                     chunks = [val[x:x+990] for x in range(0, len(val), 990)]
                     df_list = []
                     for chunk in chunks:
                         values = chunk
-                        bindValues = [':' + str(i+1) for i in range(len(values))]
+                        bindValues = [':' + str(i+1) for i in range(len(values))] # Creates bindvalues list as [:1, :2, :3, ...]
                         bindDate = [':dateMin', ':dateMax']
+                        
+                        # Create a dictionary of all the bindvalues and values to relate them to eachother.
                         bindAll =  bindValues + bindDate
                         values = values + [self.dateMin, self.dateMax]
                         bindDict = dict(zip(bindAll, values))
+                        
+                        # Bindvalues are directly injected into the query.
                         query = 'SELECT mg.pbs_id, pb.buiscode||\'-\'||pb.volgnummer PEILBUIS, mg.wnc_code, mg.id, mg.datum_meting, mg.meetwaarde, mg.hoogte_meetmerk ' +\
                             'FROM PRW.prw_meetgegevens mg ' + \
                             'INNER JOIN PRW.prw_peilbuizen pb ON pb.id = mg.pbs_id ' + \
@@ -512,19 +530,22 @@ class PRW_Data_Opvrager:
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
                             'AND mg.pbs_id IN ({})'.format(','.join(bindValues))
                         fetched, description = self.fetch(query, bindDict)
+                        
                         if(len(fetched) > 0):
                             mtg_df = pd.DataFrame(fetched)
                             colnames = [desc[0] for desc in description]
                             mtg_df.columns = colnames
                             df_list.append(mtg_df)
+                    
+                    # If df_list contains any dataframes
                     if df_list:
                         mtg_df_all = pd.concat(df_list, ignore_index=True)
                         return mtg_df_all
                     else:
-                        self.iface.messageBar().pushMessage("Error", 'Deze PBS_IDS hebben geen meetgegevens beschikbaar tussen '\
-                                 + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val), level=Qgis.Critical)
+                        self.iface.messageBar().pushMessage("Error", 'Deze PBS_IDS hebben geen meetgegevens tussen '\
+                                 + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val), level=Qgis.Critical, duration=10)
                         raise ValueError(
-                            'Deze PBS_IDS hebben geen meetgegevens beschikbaar tussen '\
+                            'Deze PBS_IDS hebben geen meetgegevens tussen '\
                                  + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val))
                 else:
                     raise TypeError('not all inputs are integers')
