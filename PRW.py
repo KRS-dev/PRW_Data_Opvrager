@@ -29,7 +29,7 @@ from qgis.PyQt.QtWidgets import QAction
 from .resources import *
 # Import the code for the dialog
 from .PRW_dialog import PRW_Data_OpvragerDialog
-from qgis.core import QgsDataSourceUri, QgsCredentials
+from qgis.core import QgsDataSourceUri, QgsCredentials, Qgis
 
 import os
 import xlwt
@@ -300,6 +300,7 @@ class PRW_Data_Opvrager:
         pbs_ids         =   self.get_pbs_ids(self.selected_layer)
         df_pbs          =   self.get_peilbuizen(pbs_ids)
         df_meetgegevens =   self.get_meetgegevens(pbs_ids)
+        df_pbStats      =   self.PbStats(df_meetgegevens)
         
         ond_filt    =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values
         bov_filt    =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
@@ -307,8 +308,6 @@ class PRW_Data_Opvrager:
         df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],
             columns=['Maaiveld', 'Bovenkant Peilbuis', 'Bovenkant Filter', 'Onderkant Filter'],
             data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, bov_filt, ond_filt))
-        
-        df_pbStats = self.PbStats(df_meetgegevens)
 
         df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
 
@@ -444,6 +443,7 @@ class PRW_Data_Opvrager:
                 try:
                     pbs_ids.append(f.attribute('ID'))
                 except KeyError:
+                    self.iface.messageBar().pushMessage("Error", 'This layer does not contain an attribute called \'ID\'.', level=Qgis.Critical)
                     raise KeyError(
                         'This layer does not contain an attribute called \'ID\'.')
             return pbs_ids
@@ -470,10 +470,11 @@ class PRW_Data_Opvrager:
                             colnames = [desc[0] for desc in description]
                             pbs_df.columns = colnames
                             df_list.append(pbs_df)
-                    pbs_df_all = pd.concat(df_list, ignore_index=True)
-                    if pbs_df_all.empty != True:
+                    if df_list:
+                        pbs_df_all = pd.concat(df_list, ignore_index=True)
                         return pbs_df_all
                     else:
+                        self.iface.messageBar().pushMessage("Error", 'These selected GBS_ID\'s do not contain any valid: ' + str(values)), level=Qgis.Critical)
                         raise ValueError(
                             'These selected GBS_ID\'s do not contain any valid: ' + str(values))
                 else:
@@ -515,10 +516,12 @@ class PRW_Data_Opvrager:
                             colnames = [desc[0] for desc in description]
                             mtg_df.columns = colnames
                             df_list.append(mtg_df)
-                    mtg_df_all = pd.concat(df_list, ignore_index=True)
-                    if mtg_df_all.empty != True:
+                    if df_list:
+                        mtg_df_all = pd.concat(df_list, ignore_index=True)
                         return mtg_df_all
                     else:
+                        self.iface.messageBar().pushMessage("Error", 'Deze PBS_IDS hebben geen meetgegevens beschikbaar tussen '\
+                                 + dateMin + ' en ' + dateMax + '\n PBS_IDS: ' + str(values)), level=Qgis.Critical)
                         raise ValueError(
                             'Deze PBS_IDS hebben geen meetgegevens beschikbaar tussen '\
                                  + dateMin + ' en ' + dateMax + '\n PBS_IDS: ' + str(values))
@@ -549,7 +552,7 @@ class PRW_Data_Opvrager:
         for i, row in df_stats.iterrows():
             pb = row['PEILBUIS']      # Current location
             df2 = df_in.loc[df_in['PEILBUIS']==pb]         # Select part of full dataframe to calculate statistics
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['Maximaal gemeten']]   = df2['MEETWAARDE'].max()
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['Maximaal gemeten']]    = df2['MEETWAARDE'].max()
             df_stats.loc[df_stats['PEILBUIS']==pb, ['95-percentiel']]       = df2['MEETWAARDE'].quantile(0.95)
             df_stats.loc[df_stats['PEILBUIS']==pb, ['Gemiddelde']]          = df2['MEETWAARDE'].mean()
             df_stats.loc[df_stats['PEILBUIS']==pb, ['5-percentiel']]        = df2['MEETWAARDE'].quantile(0.05)
