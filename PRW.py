@@ -448,15 +448,16 @@ class PRW_Data_Opvrager:
                         'This layer does not contain an attribute called \'ID\'.')
             return pbs_ids
         else:
-            raise KeyError('No features were selected in the layer')
+            self.iface.messageBar().pushMessage("Error", 'No features were selected in the layer.', level=Qgis.Critical)
+            raise KeyError('No features were selected in the layer.')
 
     def get_peilbuizen(self, pbs_ids):
         '''Setting up the queries to fetch all data from the PRW_Peilbuizen table and processing the data as a pandas.DataFrame.'''
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
             if len(pbs_ids) > 0:
                 if(all(isinstance(x, int) for x in pbs_ids)):
-                    values = list(pbs_ids)
-                    chunks = [values[x:x+1000] for x in range(0, len(values), 1000)]
+                    val = list(pbs_ids)
+                    chunks = [val[x:x+1000] for x in range(0, len(val), 1000)]
                     df_list = []
                     for chunk in chunks:
                         values = chunk
@@ -474,9 +475,9 @@ class PRW_Data_Opvrager:
                         pbs_df_all = pd.concat(df_list, ignore_index=True)
                         return pbs_df_all
                     else:
-                        self.iface.messageBar().pushMessage("Error", 'These selected GBS_ID\'s do not contain any valid: ' + str(values), level=Qgis.Critical)
+                        self.iface.messageBar().pushMessage("Error", 'These selected GBS_ID\'s do not contain any valid: ' + str(val), level=Qgis.Critical)
                         raise ValueError(
-                            'These selected GBS_ID\'s do not contain any valid: ' + str(values))
+                            'These selected GBS_ID\'s do not contain any valid: ' + str(val))
                 else:
                     raise TypeError('not all inputs are integers')
             else:
@@ -494,8 +495,8 @@ class PRW_Data_Opvrager:
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
             if len(pbs_ids) > 0:
                 if(all(isinstance(x, int) for x in pbs_ids)):
-                    values = list(pbs_ids)
-                    chunks = [values[x:x+990] for x in range(0, len(values), 990)]
+                    val = list(pbs_ids)
+                    chunks = [val[x:x+990] for x in range(0, len(val), 990)]
                     df_list = []
                     for chunk in chunks:
                         values = chunk
@@ -521,10 +522,10 @@ class PRW_Data_Opvrager:
                         return mtg_df_all
                     else:
                         self.iface.messageBar().pushMessage("Error", 'Deze PBS_IDS hebben geen meetgegevens beschikbaar tussen '\
-                                 + dateMin + ' en ' + dateMax + '\n PBS_IDS: ' + str(values), level=Qgis.Critical)
+                                 + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val), level=Qgis.Critical)
                         raise ValueError(
                             'Deze PBS_IDS hebben geen meetgegevens beschikbaar tussen '\
-                                 + dateMin + ' en ' + dateMax + '\n PBS_IDS: ' + str(values))
+                                 + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val))
                 else:
                     raise TypeError('not all inputs are integers')
             else:
