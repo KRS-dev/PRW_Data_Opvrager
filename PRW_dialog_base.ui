@@ -81,7 +81,7 @@
        <widget class="QgsDateTimeEdit" name="DateMin">
         <property name="date">
          <date>
-          <year>2000</year>
+          <year>1900</year>
           <month>4</month>
           <day>11</day>
          </date>

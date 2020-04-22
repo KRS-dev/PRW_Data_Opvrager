@@ -299,7 +299,7 @@ class PRW_Data_Opvrager:
         '''Fetch data and write it off to an excel file in the selected file location.'''
         # Use the fetch functions to collect all the data
         pbs_ids         =   self.get_pbs_ids(self.selected_layer)
-        pbs_ids         =   int(pbs_ids)
+        pbs_ids         =   [int(x) for x in pbs_ids]
         df_pbs          =   self.get_peilbuizen(pbs_ids)
         df_meetgegevens =   self.get_meetgegevens(pbs_ids)
         # Calculate the statistics of the meetgegevens.
