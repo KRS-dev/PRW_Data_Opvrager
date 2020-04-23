@@ -334,7 +334,7 @@ class PRW_Data_Opvrager:
             df_pbs.to_excel(writer, sheet_name=prw_pbs_sheetname, index=False, freeze_panes=(1, 2))
             meetgeg_sheet = writer.sheets[prw_pbs_sheetname]
             # Sets the width of each column
-            i = 0
+            i = 1
             for colname in df_pbs.columns:
                 meetgeg_sheet.set_column(i, i, len(colname)*1.3)
                 i += 1
@@ -373,17 +373,18 @@ class PRW_Data_Opvrager:
             # Meetgegevens Chart formatting
             minGWS = float(min(df_meetgegevens['MEETWAARDE']))
             chart.set_x_axis({
-                'name': 'Datum ',
-                'name_font': {'size': 14, 'bold': True},
+                'name':             'Datum ',
+                'name_font':        {'size': 14, 'bold': True},
                 'date_axis':        True,
                 'major_tick_mark':  'inside',
                 'minor_tick_mark':  'none',
                 'crossing':         -10
             })
             chart.set_y_axis({
-                'name': 'Grondwaterstand in mNAP',
-                'name_font': {'size': 14, 'bold': True},
-                'major_gridlines': {'visible': True}
+                'name':             'Grondwaterstand in mNAP',
+                'name_font':        {'size': 14, 'bold': True},
+                'major_gridlines':  {'visible': True}
+                'crossing':         minGWS
             })
             chart.set_size({'x_scale': 2, 'y_scale': 1.5})
             chart.set_legend({'font': {'size': 12, 'bold': True}})
