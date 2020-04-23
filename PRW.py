@@ -21,8 +21,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QRegExp
+from qgis.PyQt.QtGui import QIcon, QRegExpValidator
 from qgis.PyQt.QtWidgets import QAction
 
 # Initialize Qt resources from file resources.py
@@ -329,8 +329,8 @@ class PRW_Data_Opvrager:
 
         # Writing the data to excel sheets
         with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w', 
-                            datetime_format='mmm d yyyy', 
-                            date_format='mmmm dd yyyy') as writer:
+                            datetime_format='d-mm-yyyy', 
+                            date_format='d-mm-yyyy') as writer:
             workbook = writer.book
             
             ## Adding the peilbuis tabel to an Excelsheet
