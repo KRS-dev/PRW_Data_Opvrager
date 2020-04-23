@@ -351,14 +351,11 @@ class PRW_Data_Opvrager:
                 # Parsing data per Peilbuis
                 df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
                 df_temp = df_temp[['DATUM_METING', 'MEETWAARDE']].dropna(subset=['MEETWAARDE'])
-                # Create a hierarchical columnIndex
-                tuples = ((pbs, 'DATUM_METING'), (pbs, 'MEETWAARDE'))
-                columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PEILBUIS', 'MEETGEGEVENS'])
-                df_temp.columns = columnIndex
                 # Write to Excelsheet
-                df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col, index=False)
+                df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col, startrow=1, index=False)
                 # Sets the width of the columns in Excel
                 meetgeg_sheet = writer.sheets[prw_meetgeg_sheetname]
+                meetgeg_sheet.write(0, col + 1, pbs)
                 meetgeg_sheet.set_column(col, col, 15)
                 meetgeg_sheet.set_column(col + 1, col + 2, 13)
 
