@@ -336,7 +336,7 @@ class PRW_Data_Opvrager:
             # Sets the width of each column
             i = 0
             for colname in df_pbs.columns:
-                meetgeg_sheet.set_column(i, i, len(colname))
+                meetgeg_sheet.set_column(i, i, len(colname)*1.3)
                 i += 1
 
             ## Adding the meetgegevens per peilbuis to the same Excelsheet
