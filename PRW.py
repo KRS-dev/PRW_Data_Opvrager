@@ -357,7 +357,7 @@ class PRW_Data_Opvrager:
                 # Sets the width of the columns in Excel
                 meetgeg_sheet = writer.sheets[prw_meetgeg_sheetname]
                 meetgeg_sheet.set_column(col, col, 15)
-                meetgeg_sheet.set_column(col+1, col+2, 13)
+                meetgeg_sheet.set_column(col + 1, col + 2, 13)
 
                 # Adding the meetgegevens series to a chart
                 N = len(df_temp.index)
