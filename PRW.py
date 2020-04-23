@@ -299,7 +299,7 @@ class PRW_Data_Opvrager:
     def get_data(self):
         '''Fetch data and write it off to an excel file in the selected file location.'''
         # Set up a Progression Dialog.
-        dialog, bar = progressDialog(0)
+        dialog, bar = self.progressDialog(0)
         dialog.setText('Ophalen Peilbuis Data...')
         # Use the fetch functions to collect all the data
         pbs_ids         =   self.get_pbs_ids(self.selected_layer)
