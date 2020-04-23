@@ -383,8 +383,7 @@ class PRW_Data_Opvrager:
             chart.set_y_axis({
                 'name':             'Grondwaterstand in mNAP',
                 'name_font':        {'size': 14, 'bold': True},
-                'major_gridlines':  {'visible': True},
-                'crossing':         minGWS
+                'major_gridlines':  {'visible': True}
             })
             chart.set_size({'x_scale': 2, 'y_scale': 1.5})
             chart.set_legend({'font': {'size': 12, 'bold': True}})
