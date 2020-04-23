@@ -300,18 +300,18 @@ class PRW_Data_Opvrager:
         '''Fetch data and write it off to an excel file in the selected file location.'''
         # Set up a Progression Dialog.
         dialog, bar = self.progressDialog(0)
-        dialog.setText('Ophalen Peilbuis Data...')
+        dialog.setLabelText('Ophalen Peilbuis Data...')
         # Use the fetch functions to collect all the data
         pbs_ids         =   self.get_pbs_ids(self.selected_layer)
         pbs_ids         =   [int(x) for x in pbs_ids]
         df_pbs          =   self.get_peilbuizen(pbs_ids)
         
-        dialog.setText('Ophalen Meetgegevens...')
+        dialog.setLabelText('Ophalen Meetgegevens...')
         bar.setValue(10)
 
         df_meetgegevens =   self.get_meetgegevens(pbs_ids)
 
-        dialog.setText('Statistiek berekenen...')
+        dialog.setLabelText('Statistiek berekenen...')
         bar.setValue(20)
 
         # Calculate the statistics of the meetgegevens.
@@ -324,7 +324,7 @@ class PRW_Data_Opvrager:
             data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, bov_filt, ond_filt))
         df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
 
-        dialog.setText('Excel sheet aanmaken...')
+        dialog.setLabelText('Excel sheet aanmaken...')
         bar.setValue(40)
 
         # Check if the directory has to be created.
@@ -347,7 +347,7 @@ class PRW_Data_Opvrager:
                             date_format='d-mm-yyyy') as writer:
             workbook = writer.book
             
-            dialog.setText('Excel sheets invullen...')
+            dialog.setLabelText('Excel sheets invullen...')
             bar.setValue(50)
 
             ## Adding the peilbuis tabel to an Excelsheet
@@ -420,7 +420,7 @@ class PRW_Data_Opvrager:
             prw_stat_sheet.set_column(0, 0, 25)
             prw_stat_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
         
-        dialog.setText('Excel opstarten...')
+        dialog.setLabelText('Excel opstarten...')
         bar.setValue(100)
 
         # Start the excel file
