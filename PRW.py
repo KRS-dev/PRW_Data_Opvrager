@@ -204,13 +204,17 @@ class PRW_Data_Opvrager:
             self.dlg = PRW_Data_OpvragerDialog()
             self.dlg.OutputLocation.setStorageMode(1)
             self.dlg.OutputLocation.setFilePath(self.dlg.OutputLocation.defaultRoot())
+            # Set a validator on the filename lineEdit so that no random signs can be put in.
+            rx2 = QRegExp(r"^[\w\-. ]+$")
+            filename_validator = QRegExpValidator(rx2)
+            self.dlg.FileName.setValidator(filename_validator)
 
         # Look for all connected databases in Qgis
         settings = QSettings()
         allkeys = settings.allKeys()
         databases = [k for k in allkeys if 'database' in k]
         databaseNames = [settings.value(k) for k in databases]
-        # Holding on to the previous current index 
+        # Holding on to the previous current index.
         cur_i = self.dlg.DatabaseComboBox.currentIndex()
         self.dlg.DatabaseComboBox.clear()
         self.dlg.DatabaseComboBox.addItems(databaseNames)
