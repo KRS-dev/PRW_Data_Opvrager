@@ -378,7 +378,7 @@ class PRW_Data_Opvrager:
                 'date_axis':        True,
                 'major_tick_mark':  'inside',
                 'minor_tick_mark':  'none',
-                'crossing':         minGWS
+                'crossing':         -10
             })
             chart.set_y_axis({
                 'name': 'Grondwaterstand in mNAP',
