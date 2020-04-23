@@ -334,9 +334,9 @@ class PRW_Data_Opvrager:
             df_pbs.to_excel(writer, sheet_name=prw_pbs_sheetname, index=False, freeze_panes=(1, 2))
             meetgeg_sheet = writer.sheets[prw_pbs_sheetname]
             # Sets the width of each column
-            i = 1
+            i = 0
             for colname in df_pbs.columns:
-                meetgeg_sheet.set_column(i, i, len(colname)*1.3)
+                meetgeg_sheet.set_column(i, i, len(colname) * 1.3)
                 i += 1
 
             ## Adding the meetgegevens per peilbuis to the same Excelsheet
@@ -346,14 +346,13 @@ class PRW_Data_Opvrager:
             for pbs in df_meetgegevens['PEILBUIS'].unique():
                 # Parsing data per Peilbuis
                 df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
-                df_temp = df_temp[['DATUM_METING', 'WNC_CODE', 'MEETWAARDE']]
-                df_temp = df_temp.set_index('DATUM_METING')
+                df_temp = df_temp[['DATUM_METING', 'MEETWAARDE']].dropna(subset=['MEETWAARDE'])
                 # Create a hierarchical columnIndex
-                tuples = ((pbs, 'WNC_CODE'), (pbs, 'MEETWAARDE'))
+                tuples = ((pbs, 'DATUM_METING'), (pbs, 'MEETWAARDE'))
                 columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PEILBUIS', 'MEETGEGEVENS'])
                 df_temp.columns = columnIndex
                 # Write to Excelsheet
-                df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col)
+                df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col, ignore_index=True)
                 # Sets the width of the columns in Excel
                 meetgeg_sheet = writer.sheets[prw_meetgeg_sheetname]
                 meetgeg_sheet.set_column(col, col, 15)
@@ -362,13 +361,12 @@ class PRW_Data_Opvrager:
                 # Adding the meetgegevens series to a chart
                 N = len(df_temp.index)
                 chart.add_series({
-                    'name':         ['PRW_Peilbuis_Meetgegevens', 0, col + 1],
+                    'name':         ['PRW_Peilbuis_Meetgegevens', 0, col],
                     'categories':   ['PRW_Peilbuis_Meetgegevens', 3, col, N + 3, col],
-                    'values':       ['PRW_Peilbuis_Meetgegevens', 3, col + 2, N + 3, col + 2],
-                    'marker':       {'type': 'automatic'},
+                    'values':       ['PRW_Peilbuis_Meetgegevens', 3, col + 1, N + 3, col + 1]
                 })
                 
-                col = col + 4
+                col = col + 3
             
             # Meetgegevens Chart formatting
             minGWS = float(min(df_meetgegevens['MEETWAARDE']))
@@ -378,12 +376,13 @@ class PRW_Data_Opvrager:
                 'date_axis':        True,
                 'major_tick_mark':  'inside',
                 'minor_tick_mark':  'none',
-                'crossing':         -10
+                'crossing':         minGWS
             })
             chart.set_y_axis({
                 'name':             'Grondwaterstand in mNAP',
                 'name_font':        {'size': 14, 'bold': True},
-                'major_gridlines':  {'visible': True}
+                'major_gridlines':  {'visible': True},
+                'crossing':         minGWS
             })
             chart.set_size({'x_scale': 2, 'y_scale': 1.5})
             chart.set_legend({'font': {'size': 12, 'bold': True}})
@@ -393,9 +392,9 @@ class PRW_Data_Opvrager:
             ## Adding the statistieken tabel to an Excelsheet
             prw_stat_sheetname = 'Peilbuizen Statistiek'
             df_pbStats_pbs.to_excel(writer, sheet_name=prw_stat_sheetname, freeze_panes=(1,1))
-            meetgeg_sheet = writer.sheets[prw_stat_sheetname]
-            meetgeg_sheet.set_column(0, 0, 25)
-            meetgeg_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
+            prw_stat_sheet = writer.sheets[prw_stat_sheetname]
+            prw_stat_sheet.set_column(0, 0, 25)
+            prw_stat_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
 
         # Start the excel file
         os.startfile(output_file_dir)     
@@ -529,11 +528,11 @@ class PRW_Data_Opvrager:
                     # Bindvalues are used in the queries to prevent SQL-injection. 
                     # Queries with more than 1000 bindvalues raise an error in cx_Oracle, robustness is built in by creating chunks
                     # More info about bindvalues can be found in the cx_Oracle docs.
-                    chunks = [val[x:x+990] for x in range(0, len(val), 990)]
+                    chunks = [val[x: x + 990] for x in range(0, len(val), 990)]
                     df_list = []
                     for chunk in chunks:
                         values = chunk
-                        bindValues = [':' + str(i+1) for i in range(len(values))] # Creates bindvalues list as [:1, :2, :3, ...]
+                        bindValues = [':' + str(i + 1) for i in range(len(values))] # Creates bindvalues list as [:1, :2, :3, ...]
                         bindDate = [':dateMin', ':dateMax']
                         
                         # Create a dictionary of all the bindvalues and values to relate them to eachother.
