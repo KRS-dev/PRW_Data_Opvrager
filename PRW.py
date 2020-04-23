@@ -355,6 +355,7 @@ class PRW_Data_Opvrager:
                 df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col, startrow=1, index=False)
                 # Sets the width of the columns in Excel
                 meetgeg_sheet = writer.sheets[prw_meetgeg_sheetname]
+                meetgeg_sheet.freeze_panes(2, 0)
                 meetgeg_sheet.write(0, col + 1, pbs)
                 meetgeg_sheet.set_column(col, col, 15)
                 meetgeg_sheet.set_column(col + 1, col + 2, 13)
@@ -362,7 +363,7 @@ class PRW_Data_Opvrager:
                 # Adding the meetgegevens series to a chart
                 N = len(df_temp.index)
                 chart.add_series({
-                    'name':         ['PRW_Peilbuis_Meetgegevens', 0, col],
+                    'name':         ['PRW_Peilbuis_Meetgegevens', 0, col + 1],
                     'categories':   ['PRW_Peilbuis_Meetgegevens', 3, col, N + 3, col],
                     'values':       ['PRW_Peilbuis_Meetgegevens', 3, col + 1, N + 3, col + 1]
                 })
@@ -377,7 +378,6 @@ class PRW_Data_Opvrager:
                 'date_axis':        True,
                 'major_tick_mark':  'inside',
                 'minor_tick_mark':  'none',
-                'crossing':         minGWS
             })
             chart.set_y_axis({
                 'name':             'Grondwaterstand in mNAP',
