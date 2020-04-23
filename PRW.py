@@ -21,7 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QVariant
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
@@ -98,7 +98,6 @@ class PRW_Data_Opvrager:
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('PRW_Data_Opvrager', message)
-
 
     def add_action(
         self,
@@ -187,7 +186,6 @@ class PRW_Data_Opvrager:
         # will be set False in run()
         self.first_start = True
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -196,13 +194,12 @@ class PRW_Data_Opvrager:
                 action)
             self.iface.removeToolBarIcon(action)
 
-
     def run(self):
         """Run method that performs all the real work"""
 
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
-        if self.first_start == True:
+        if self.first_start:
             self.first_start = False
             self.dlg = PRW_Data_OpvragerDialog()
             self.dlg.OutputLocation.setStorageMode(1)
@@ -332,21 +329,36 @@ class PRW_Data_Opvrager:
                             date_format='mmmm dd yyyy') as writer:
             workbook = writer.book
             
-            df_pbs.to_excel(writer, sheet_name='PRW_Peilbuizen', index=False, freeze_panes=(1,2))
-            
+            ## Adding the peilbuis tabel to an Excelsheet
+            prw_pbs_sheetname = 'PRW_Peilbuizen'
+            meetgeg_sheet = workbook.add_worksheet(prw_pbs_sheetname)
+            df_pbs.to_excel(writer, sheet_name=prw_pbs_sheetname, index=False, freeze_panes=(1, 2))
+            # Sets the width of each column
+            i = 0
+            for colname in df_pbs.columns:
+                meetgeg_sheet.set_column(i, i, len(colname))
+                i += 1
+            ## Adding the meetgegevens per peilbuis to the same Excelsheet
             chart = workbook.add_chart({'type':'line'})
-
-            # Adding all meetgegevens series to a chart
+            prw_meetgeg_sheetname = 'PRW_Peilbuis_Meetgegevens'
+            meetgeg_sheet = workbook.add_worksheet(prw_meetgeg_sheetname)
             col = 0
             for pbs in df_meetgegevens['PEILBUIS'].unique():
+                # Parsing data per Peilbuis
                 df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
                 df_temp = df_temp[['DATUM_METING', 'WNC_CODE','MEETWAARDE']]
+                df_temp = df_temp.set_index('DATUM_METING')
+                # Create a hierarchical columnIndex 
                 tuples = ((pbs, 'WNC_CODE'), (pbs, 'MEETWAARDE'))
                 columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PEILBUIS', 'MEETGEGEVENS'])
-                df_temp = df_temp.set_index('DATUM_METING') 
                 df_temp.columns = columnIndex
-                df_temp.to_excel(writer, sheet_name='PRW_Peilbuis_Meetgegevens', startcol=col)
-                
+                # Write to Excelsheet
+                df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col)
+                # Sets the width of the columns in Excel
+                meetgeg_sheet.set_column(col, col, 15)
+                meetgeg_sheet.set_column(col+1, col+2, 13)
+
+                # Adding the meetgegevens series to a chart
                 N = len(df_temp.index)
                 chart.add_series({
                     'name':         ['PRW_Peilbuis_Meetgegevens', 0, col + 1],
@@ -357,7 +369,7 @@ class PRW_Data_Opvrager:
                 
                 col = col + 4
             
-            # Chart formatting
+            # Meetgegevens Chart formatting
             minGWS = float(min(df_meetgegevens['MEETWAARDE']))
             chart.set_x_axis({
                 'name': 'Datum ',
@@ -371,13 +383,18 @@ class PRW_Data_Opvrager:
                 'name': 'Grondwaterstand in mNAP',
                 'name_font': {'size': 14, 'bold': True},
                 'major_gridlines': {'visible': True}
-                })
+            })
             chart.set_size({'x_scale': 2, 'y_scale': 1.5})
             chart.set_legend({'font': {'size': 12, 'bold': True}})
             chartsheet = workbook.add_chartsheet('Peilbuis Grafiek')
             chartsheet.set_chart(chart)
-
-            df_pbStats_pbs.to_excel(writer, sheet_name='Peilbuizen Statistiek', freeze_panes=(1,1))
+            
+            ## Adding the statistieken tabel to an Excelsheet
+            prw_stat_sheetname = 'Peilbuizen Statistiek'
+            meetgeg_sheet = workbook.add_worksheet(prw_stat_sheetname)
+            df_pbStats_pbs.to_excel(writer, sheet_name=prw_stat_sheetname, freeze_panes=(1,1))
+            meetgeg_sheet.set_column(0, 0, 25)
+            meetgeg_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
 
         # Start the excel file
         os.startfile(output_file_dir)     
@@ -413,7 +430,7 @@ class PRW_Data_Opvrager:
             user=self.username,
             password=self.password, 
             dsn=self.dsn
-                ) as dbcon:
+        ):
             pass
     
     def fetch(self, query, data):
@@ -422,7 +439,7 @@ class PRW_Data_Opvrager:
             user=self.username,
             password=self.password, 
             dsn=self.dsn
-                ) as dbcon:
+        ) as dbcon:
             
             cur = dbcon.cursor()
             try:
