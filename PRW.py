@@ -356,7 +356,7 @@ class PRW_Data_Opvrager:
                 columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PEILBUIS', 'MEETGEGEVENS'])
                 df_temp.columns = columnIndex
                 # Write to Excelsheet
-                df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col, ignore_index=True)
+                df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col, index=False)
                 # Sets the width of the columns in Excel
                 meetgeg_sheet = writer.sheets[prw_meetgeg_sheetname]
                 meetgeg_sheet.set_column(col, col, 15)
