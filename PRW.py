@@ -331,30 +331,31 @@ class PRW_Data_Opvrager:
             
             ## Adding the peilbuis tabel to an Excelsheet
             prw_pbs_sheetname = 'PRW_Peilbuizen'
-            meetgeg_sheet = workbook.add_worksheet(prw_pbs_sheetname)
+            
             df_pbs.to_excel(writer, sheet_name=prw_pbs_sheetname, index=False, freeze_panes=(1, 2))
+            meetgeg_sheet = workbook.sheets[prw_pbs_sheetname]
             # Sets the width of each column
             i = 0
             for colname in df_pbs.columns:
                 meetgeg_sheet.set_column(i, i, len(colname))
                 i += 1
             ## Adding the meetgegevens per peilbuis to the same Excelsheet
-            chart = workbook.add_chart({'type':'line'})
+            chart = workbook.add_chart({'type': 'line'})
             prw_meetgeg_sheetname = 'PRW_Peilbuis_Meetgegevens'
-            meetgeg_sheet = workbook.add_worksheet(prw_meetgeg_sheetname)
             col = 0
             for pbs in df_meetgegevens['PEILBUIS'].unique():
                 # Parsing data per Peilbuis
                 df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
-                df_temp = df_temp[['DATUM_METING', 'WNC_CODE','MEETWAARDE']]
+                df_temp = df_temp[['DATUM_METING', 'WNC_CODE', 'MEETWAARDE']]
                 df_temp = df_temp.set_index('DATUM_METING')
-                # Create a hierarchical columnIndex 
+                # Create a hierarchical columnIndex
                 tuples = ((pbs, 'WNC_CODE'), (pbs, 'MEETWAARDE'))
                 columnIndex = pd.MultiIndex.from_tuples(tuples, names=['PEILBUIS', 'MEETGEGEVENS'])
                 df_temp.columns = columnIndex
                 # Write to Excelsheet
                 df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col)
                 # Sets the width of the columns in Excel
+                meetgeg_sheet = workbook.sheets[prw_meetgeg_sheetname]
                 meetgeg_sheet.set_column(col, col, 15)
                 meetgeg_sheet.set_column(col+1, col+2, 13)
 
@@ -391,8 +392,8 @@ class PRW_Data_Opvrager:
             
             ## Adding the statistieken tabel to an Excelsheet
             prw_stat_sheetname = 'Peilbuizen Statistiek'
-            meetgeg_sheet = workbook.add_worksheet(prw_stat_sheetname)
             df_pbStats_pbs.to_excel(writer, sheet_name=prw_stat_sheetname, freeze_panes=(1,1))
+            meetgeg_sheet = workbook.sheets[prw_stat_sheetname]
             meetgeg_sheet.set_column(0, 0, 25)
             meetgeg_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
 
