@@ -298,23 +298,23 @@ class PRW_Data_Opvrager:
     
     def get_data(self):
         '''Fetch data and write it off to an excel file in the selected file location.'''
-        # Set up a Progression Dialog.
-        dialog, bar = self.progressDialog(0)
-        bar.setValue(0)
-        bar.setMaximum(100)
-        dialog.setLabelText('Ophalen Peilbuis Data...')
+        # Set up a Progression prog.
+        prog = QProgressDialog('Working...','cancel', 0, 100)
+        prog.setWindowModality(Qt.WindowModal)
+        prog.setValue(0)
+        prog.setLabelText('Ophalen Peilbuis Data...')
         # Use the fetch functions to collect all the data
         pbs_ids         =   self.get_pbs_ids(self.selected_layer)
         pbs_ids         =   [int(x) for x in pbs_ids]
         df_pbs          =   self.get_peilbuizen(pbs_ids)
         
-        dialog.setLabelText('Ophalen Meetgegevens...')
-        bar.setValue(10)
+        prog.setLabelText('Ophalen Meetgegevens...')
+        prog.setValue(10)
 
         df_meetgegevens =   self.get_meetgegevens(pbs_ids)
 
-        dialog.setLabelText('Statistiek berekenen...')
-        bar.setValue(20)
+        prog.setLabelText('Statistiek berekenen...')
+        prog.setValue(20)
 
         # Calculate the statistics of the meetgegevens.
         df_pbStats      =   self.PbStats(df_meetgegevens)
@@ -326,8 +326,8 @@ class PRW_Data_Opvrager:
             data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, bov_filt, ond_filt))
         df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
 
-        dialog.setLabelText('Excel sheet aanmaken...')
-        bar.setValue(40)
+        prog.setLabelText('Excel sheet aanmaken...')
+        prog.setValue(40)
 
         # Check if the directory has to be created.
         if os.path.isdir(self.outputLocation) == False:
@@ -349,8 +349,8 @@ class PRW_Data_Opvrager:
                             date_format='d-mm-yyyy') as writer:
             workbook = writer.book
             
-            dialog.setLabelText('Excel sheets invullen...')
-            bar.setValue(50)
+            prog.setLabelText('Excel sheets invullen...')
+            prog.setValue(50)
 
             ## Adding the peilbuis tabel to an Excelsheet
             prw_pbs_sheetname = 'PRW_Peilbuizen'
@@ -362,7 +362,7 @@ class PRW_Data_Opvrager:
                 meetgeg_sheet.set_column(i, i, len(colname) * 1.3)
                 i += 1
 
-            bar.setValue(60)
+            prog.setValue(60)
 
             ## Adding the meetgegevens per peilbuis to the same Excelsheet
             chart = workbook.add_chart({'type': 'line'})
@@ -391,7 +391,7 @@ class PRW_Data_Opvrager:
                 
                 col = col + 3
         
-            bar.setValue(80)
+            prog.setValue(80)
 
             # Meetgegevens Chart formatting
             minGWS = float(min(df_meetgegevens['MEETWAARDE']))
@@ -413,7 +413,7 @@ class PRW_Data_Opvrager:
             chartsheet = workbook.add_chartsheet('Peilbuis Grafiek')
             chartsheet.set_chart(chart)
             
-            bar.setValue(90)
+            prog.setValue(90)
 
             # Adding the statistieken tabel to an Excelsheet
             prw_stat_sheetname = 'Peilbuizen Statistiek'
@@ -422,8 +422,8 @@ class PRW_Data_Opvrager:
             prw_stat_sheet.set_column(0, 0, 25)
             prw_stat_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
         
-        dialog.setLabelText('Excel opstarten...')
-        bar.setValue(100)
+        prog.setLabelText('Excel opstarten...')
+        prog.setValue(100)
 
         # Start the excel file
         os.startfile(output_file_dir)     
@@ -642,15 +642,3 @@ class PRW_Data_Opvrager:
 
         # Return transposed dataframe
         return df_stats
-
-    def progressDialog(self, progress):
-        dialog = QProgressDialog()
-        dialog.setWindowTitle('Progress')
-        dialog.setLabelText('text')
-        bar = QProgressBar(dialog)
-        bar.setTextVisible(True)
-        bar.setValue(progress)
-        dialog.setBar(bar)
-        dialog.setMinimumWidth(300)
-        dialog.show()
-        return dialog, bar
