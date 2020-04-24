@@ -303,7 +303,7 @@ class PRW_Data_Opvrager:
     def run_task(self):
         progDialog = QProgressDialog('Running Task in the background...', 'Cancel', 0, 100)
         self.task = HeavyLifting('PRW Database Bevraging', self)
-        progDialog.rejected.connect(self.task.cancel)
+        progDialog.canceled.connect(self.task.cancel)
         progDialog.show()
         self.task.begun.connect(lambda: progDialog.setLabelText('Begonnen met PRW peilbuisgegevens ophalen...'))
         self.task.progressChanged.connect(lambda: progDialog.setValue(self.task.progress()))
