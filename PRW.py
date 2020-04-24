@@ -300,7 +300,7 @@ class PRW_Data_Opvrager:
         '''Fetch data and write it off to an excel file in the selected file location.'''
         # Set up a Progression prog.
         prog = QProgressDialog('Working...','cancel', 0, 100)
-        prog.setWindowModality(Qt.WindowModal)
+        prog.setModal(True)
         prog.setValue(0)
         prog.setLabelText('Ophalen Peilbuis Data...')
         # Use the fetch functions to collect all the data
