@@ -277,7 +277,7 @@ class PRW_Data_Opvrager:
             if saveUsername is True and savePassword is True:
                 try:
                     self.check_connection()
-                    self.get_data()
+                    self.run_task()
                 except cora.DatabaseError as e:
                     errorObj, = e.args
                     errorMessage = errorObj.message
