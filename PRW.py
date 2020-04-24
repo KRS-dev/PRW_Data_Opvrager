@@ -23,18 +23,21 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QRegExp
 from qgis.PyQt.QtGui import QIcon, QRegExpValidator
-from qgis.PyQt.QtWidgets import QAction, QProgressDialog, QProgressBar
+from qgis.PyQt.QtWidgets import QAction, QProgressDialog
 
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
 from .PRW_dialog import PRW_Data_OpvragerDialog
-from qgis.core import QgsDataSourceUri, QgsCredentials, Qgis
+from qgis.core import (
+    QgsDataSourceUri, QgsCredentials, 
+    QgsTask, QgsApplication, QgsMessageLog, Qgis)
 
 import os
 import xlwt
 import pandas as pd
 import cx_Oracle as cora
+import time
 
 
 
@@ -235,6 +238,7 @@ class PRW_Data_Opvrager:
             self.dateMin = self.dlg.DateMin.date().toString('yyyy-MM-dd')
             self.fileName = self.dlg.FileName.text()
             self.outputLocation = self.dlg.OutputLocation.filePath()
+            
             # Retrieving necessary database info through the QSettings
             settings = QSettings()
             # All settings in Qgis have a key and a value
@@ -284,7 +288,7 @@ class PRW_Data_Opvrager:
                     if success == 'exit':
                         pass
                     elif success == 'true':
-                        self.get_data()
+                        self.run_task()
             else:
                 success, errorMessage = \
                     self.get_credentials(host, port, self.database, username=self.username, password=self.password)
@@ -294,143 +298,17 @@ class PRW_Data_Opvrager:
                 if success == 'exit':
                     pass
                 elif success == 'true':
-                    self.get_data()
-    
-    def get_data(self):
-        '''Fetch data and write it off to an excel file in the selected file location.'''
-        # Set up a Progression prog.
-        prog = QProgressDialog('Working...', 'cancel', 0, 100)
-        prog.forceShow()
-        prog.setModal(True)
-        prog.setValue(0)
-        prog.setLabelText('Ophalen Peilbuis Data...')
-        # Use the fetch functions to collect all the data
-        pbs_ids         =   self.get_pbs_ids(self.selected_layer)
-        pbs_ids         =   [int(x) for x in pbs_ids]
-        
-        prog.setValue(5)
+                    self.run_task()
 
-        df_pbs          =   self.get_peilbuizen(pbs_ids)
-        
-        prog.setLabelText('Ophalen Meetgegevens...')
-        prog.setValue(10)
-
-        df_meetgegevens =   self.get_meetgegevens(pbs_ids)
-
-        prog.setLabelText('Statistiek berekenen...')
-        prog.setValue(20)
-
-        # Calculate the statistics of the meetgegevens.
-        df_pbStats      =   self.PbStats(df_meetgegevens)
-        # Present the statistics with some peilbuis gegevens
-        ond_filt    =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values
-        bov_filt    =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
-        df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],
-            columns=['Maaiveld', 'Bovenkant Peilbuis', 'Bovenkant Filter', 'Onderkant Filter'],
-            data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, bov_filt, ond_filt))
-        df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
-
-        prog.setLabelText('Excel sheet aanmaken...')
-        prog.setValue(40)
-
-        # Check if the directory has to be created.
-        if os.path.isdir(self.outputLocation) == False:
-            os.mkdir(self.outputLocation)
-
-        fileNameExt = self.fileName + '.xlsx'
-        # Check if the selected filename exists in the dir
-        output_file_dir = os.path.join(self.outputLocation, fileNameExt)
-        if os.path.exists(output_file_dir):
-            name, ext = fileNameExt.split('.')
-            i = 1
-            while os.path.exists(os.path.join(self.outputLocation, name + '{}.'.format(i) + ext)):
-                i += 1
-            output_file_dir = os.path.join(self.outputLocation, name + '{}.'.format(i) + ext)
-
-        # Writing the data to excel sheets
-        with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w', 
-                            datetime_format='d-mm-yyyy',
-                            date_format='d-mm-yyyy') as writer:
-            workbook = writer.book
-            
-            prog.setLabelText('Excel sheets invullen...')
-            prog.setValue(50)
-
-            ## Adding the peilbuis tabel to an Excelsheet
-            prw_pbs_sheetname = 'PRW_Peilbuizen'
-            df_pbs.to_excel(writer, sheet_name=prw_pbs_sheetname, index=False, freeze_panes=(1, 2))
-            meetgeg_sheet = writer.sheets[prw_pbs_sheetname]
-            # Sets the width of each column
-            i = 0
-            for colname in df_pbs.columns:
-                meetgeg_sheet.set_column(i, i, len(colname) * 1.3)
-                i += 1
-
-            prog.setValue(60)
-
-            ## Adding the meetgegevens per peilbuis to the same Excelsheet
-            chart = workbook.add_chart({'type': 'line'})
-            prw_meetgeg_sheetname = 'PRW_Peilbuis_Meetgegevens'
-            col = 0
-            for pbs in df_meetgegevens['PEILBUIS'].unique():
-                # Parsing data per Peilbuis
-                df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
-                df_temp = df_temp[['DATUM_METING', 'MEETWAARDE']].dropna(subset=['MEETWAARDE'])
-                # Write to Excelsheet
-                df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col, startrow=1, index=False)
-                # Sets the width of the columns in Excel
-                meetgeg_sheet = writer.sheets[prw_meetgeg_sheetname]
-                meetgeg_sheet.freeze_panes(2, 0)
-                meetgeg_sheet.write(0, col + 1, pbs)
-                meetgeg_sheet.set_column(col, col, 15)
-                meetgeg_sheet.set_column(col + 1, col + 2, 13)
-
-                # Adding the meetgegevens series to a chart
-                N = len(df_temp.index)
-                chart.add_series({
-                    'name':         ['PRW_Peilbuis_Meetgegevens', 0, col + 1],
-                    'categories':   ['PRW_Peilbuis_Meetgegevens', 3, col, N + 3, col],
-                    'values':       ['PRW_Peilbuis_Meetgegevens', 3, col + 1, N + 3, col + 1]
-                })
-                
-                col = col + 3
-        
-            prog.setValue(80)
-
-            # Meetgegevens Chart formatting
-            minGWS = float(min(df_meetgegevens['MEETWAARDE']))
-            chart.set_x_axis({
-                'name':             'Datum ',
-                'name_font':        {'size': 14, 'bold': True},
-                'date_axis':        True,
-                'major_tick_mark':  'inside',
-                'minor_tick_mark':  'none',
-            })
-            chart.set_y_axis({
-                'name':             'Grondwaterstand in mNAP',
-                'name_font':        {'size': 14, 'bold': True},
-                'major_gridlines':  {'visible': True},
-                'crossing':         minGWS//1
-            })
-            chart.set_size({'x_scale': 2, 'y_scale': 1.5})
-            chart.set_legend({'font': {'size': 12, 'bold': True}})
-            chartsheet = workbook.add_chartsheet('Peilbuis Grafiek')
-            chartsheet.set_chart(chart)
-            
-            prog.setValue(90)
-
-            # Adding the statistieken tabel to an Excelsheet
-            prw_stat_sheetname = 'Peilbuizen Statistiek'
-            df_pbStats_pbs.to_excel(writer, sheet_name=prw_stat_sheetname, freeze_panes=(1,1))
-            prw_stat_sheet = writer.sheets[prw_stat_sheetname]
-            prw_stat_sheet.set_column(0, 0, 25)
-            prw_stat_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
-        
-        prog.setLabelText('Excel opstarten...')
-        prog.setValue(100)
-
-        # Start the excel file
-        os.startfile(output_file_dir)     
+    def run_task(self):
+        progDialog = QProgressDialog('Running Task in the background...', 'Cancel', 0, 100)
+        self.task = HeavyLifting('PRW Database Bevraging', self)
+        progDialog.canceled.connect(self.task.cancel)
+        self.task.begun.connect(lambda: progDialog.setLabelText('Begonnen met PRW peilbuisgegevens ophalen...'))
+        self.task.progressChanged.connect(lambda: progDialog.setValue(self.task.progress()))
+        self.task.taskCompleted.connect(progDialog.close)
+        self.task.taskTerminated.connect(progDialog.close)
+        QgsApplication.taskManager().addTask(self.task)      
 
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
         '''Show a credentials dialog form to access the database. Checks credentials when clicked ok.'''
@@ -646,3 +524,204 @@ class PRW_Data_Opvrager:
 
         # Return transposed dataframe
         return df_stats
+
+class HeavyLifting(QgsTask):
+    """This shows how to subclass QgsTask"""
+
+
+    def __init__(self, description, PRW_Data_Opvrager):
+        QgsTask.__init__(self, description, QgsTask.CanCancel)
+        self.PRW = PRW_Data_Opvrager
+        self.exception = None
+    
+    def run(self):
+        """This function is where you do the 'heavy lifting' or implement
+        the task which you want to run in a background thread. This function 
+        must return True or False and should only interact with the main thread
+        via signals"""
+        try:
+            result = self.get_data()
+            if result:
+                return True
+            else:
+                return False
+        except Exception as e:
+            self.exception = e
+            return False
+
+    def get_data(self):
+        """ This function runs the heavy code in the background."""
+        '''Fetch data and write it off to an excel file in the selected file location.'''
+        # Use the fetch functions to collect all the data
+        pbs_ids         =   self.PRW.get_pbs_ids(self.PRW.selected_layer)
+        pbs_ids         =   [int(x) for x in pbs_ids]
+        
+        self.setProgress(5)
+        if self.isCanceled():
+            return False
+
+        df_pbs          =   self.PRW.get_peilbuizen(pbs_ids)
+        
+        self.setProgress(10)
+        if self.isCanceled():
+            return False
+        
+        df_meetgegevens =   self.PRW.get_meetgegevens(pbs_ids)
+
+        self.setProgress(20)
+        if self.isCanceled():
+            return False
+
+        # Calculate the statistics of the meetgegevens.
+        df_pbStats      =   self.PRW.PbStats(df_meetgegevens)
+        # Present the statistics with some peilbuis gegevens
+        ond_filt        =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values
+        bov_filt        =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
+        df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],
+            columns=['Maaiveld', 'Bovenkant Peilbuis', 'Bovenkant Filter', 'Onderkant Filter'],
+            data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, bov_filt, ond_filt))
+        df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
+
+        self.setProgress(40)
+        if self.isCanceled():
+            return False
+        
+        # Check if the directory has to be created.
+        if os.path.isdir(self.PRW.outputLocation) is False:
+            os.mkdir(self.PRW.outputLocation)
+
+        fileNameExt = self.PRW.fileName + '.xlsx'
+        # Check if the selected filename exists in the dir
+        output_file_dir = os.path.join(self.PRW.outputLocation, fileNameExt)
+        if os.path.exists(output_file_dir):
+            name, ext = fileNameExt.split('.')
+            i = 1
+            while os.path.exists(os.path.join(self.PRW.outputLocation, name + '{}.'.format(i) + ext)):
+                i += 1
+            output_file_dir = os.path.join(self.PRW.outputLocation, name + '{}.'.format(i) + ext)
+
+        # Writing the data to excel sheets
+        with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w',
+                            datetime_format='dd-mm-yyyy',
+                            date_format='dd-mm-yyyy') as writer:
+            workbook = writer.book
+
+            self.setProgress(50)
+            if self.isCanceled():
+                return False
+            
+            ## Adding the peilbuis tabel to an Excelsheet
+            prw_pbs_sheetname = 'PRW_Peilbuizen'
+            df_pbs.to_excel(writer, sheet_name=prw_pbs_sheetname, index=False, freeze_panes=(1, 2))
+            meetgeg_sheet = writer.sheets[prw_pbs_sheetname]
+            # Sets the width of each column
+            i = 0
+            for colname in df_pbs.columns:
+                meetgeg_sheet.set_column(i, i, len(colname) * 1.3)
+                i += 1
+
+            self.setProgress(60)
+
+            ## Adding the meetgegevens per peilbuis to the same Excelsheet
+            chart = workbook.add_chart({'type': 'line'})
+            prw_meetgeg_sheetname = 'PRW_Peilbuis_Meetgegevens'
+            col = 0
+            for pbs in df_meetgegevens['PEILBUIS'].unique():
+                # Parsing data per Peilbuis
+                df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
+                df_temp = df_temp[['DATUM_METING', 'MEETWAARDE']].dropna(subset=['MEETWAARDE'])
+                # Write to Excelsheet
+                df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col, startrow=1, index=False)
+                # Sets the width of the columns in Excel
+                meetgeg_sheet = writer.sheets[prw_meetgeg_sheetname]
+                meetgeg_sheet.freeze_panes(2, 0)
+                meetgeg_sheet.write(0, col + 1, pbs)
+                meetgeg_sheet.set_column(col, col, 15)
+                meetgeg_sheet.set_column(col + 1, col + 2, 13)
+
+                # Adding the meetgegevens series to a chart
+                N = len(df_temp.index)
+                chart.add_series({
+                    'name':         ['PRW_Peilbuis_Meetgegevens', 0, col + 1],
+                    'categories':   ['PRW_Peilbuis_Meetgegevens', 3, col, N + 3, col],
+                    'values':       ['PRW_Peilbuis_Meetgegevens', 3, col + 1, N + 3, col + 1]
+                })
+                
+                col = col + 3
+
+                if self.isCanceled():
+                    return False
+        
+            self.setProgress(80)
+            if self.isCanceled():
+                return False
+
+            # Meetgegevens Chart formatting
+            minGWS = float(min(df_meetgegevens['MEETWAARDE']))
+            chart.set_x_axis({
+                'name':             'Datum ',
+                'name_font':        {'size': 14, 'bold': True},
+                'date_axis':        True,
+                'major_tick_mark':  'inside',
+                'minor_tick_mark':  'none',
+            })
+            chart.set_y_axis({
+                'name':             'Grondwaterstand in mNAP',
+                'name_font':        {'size': 14, 'bold': True},
+                'major_gridlines':  {'visible': True},
+                'crossing':         minGWS//1
+            })
+            chart.set_size({'x_scale': 2, 'y_scale': 1.5})
+            chart.set_legend({'font': {'size': 12, 'bold': True}})
+            chartsheet = workbook.add_chartsheet('Peilbuis Grafiek')
+            chartsheet.set_chart(chart)
+            
+            self.setProgress(90)
+            if self.isCanceled():
+                return False
+            
+            # Adding the statistieken tabel to an Excelsheet
+            prw_stat_sheetname = 'Peilbuizen Statistiek'
+            df_pbStats_pbs.to_excel(writer, sheet_name=prw_stat_sheetname, freeze_panes=(1,1))
+            prw_stat_sheet = writer.sheets[prw_stat_sheetname]
+            prw_stat_sheet.set_column(0, 0, 25)
+            prw_stat_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
+        
+        # Start the excel file
+        os.startfile(output_file_dir)
+
+        self.setProgress(100)
+        return True
+
+    def finished(self, result):
+        """ This function is called automatically when the task is completed and is 
+        called from the main thread so it is safe to interact with the GUI etc here"""
+        if result:
+            QgsMessageLog.logMessage(
+                'Task "{name}" completed ' \
+                'in {duration} seconds'.format(
+                    name=self.description(),
+                    duration=self.elapsedTime()
+                ), 'test', Qgis.Success)
+        else:
+            if self.exception is None:
+                QgsMessageLog.logMessage(
+                    'Task "{name}" not successful but without '\
+                    'exception (probably the task was manually '\
+                    'canceled by the user)'.format(
+                        name=self.description()),
+                    'test', Qgis.Warning)
+            else:
+                QgsMessageLog.logMessage(
+                    'Task "{name}" threw an Exception: {exception}'.format(
+                        name=self.description(),
+                        exception=self.exception),
+                    'test', Qgis.Critical)
+                raise self.exception
+    
+    def cancel(self):
+        QgsMessageLog.logMessage(
+            'Task "{name}" canceled by the user\n'.format(
+            name=self.description()
+            ), 'test', Qgis.Info)
+        super().cancel()
