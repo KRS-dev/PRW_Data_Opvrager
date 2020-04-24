@@ -541,8 +541,8 @@ class HeavyLifting(QgsTask):
                 return True
             else:
                 return False
-        except:
-            #self.exception = e
+        except Exception as e:
+            self.exception = e
             return False
 
     def get_data(self):
