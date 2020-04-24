@@ -409,7 +409,7 @@ class PRW_Data_Opvrager:
                         pbs_df_all = pd.concat(df_list, ignore_index=True)
                         return pbs_df_all
                     else:
-                        self.iface.messageBar().pushMessage("Error", 'These selected GBS_ID\'s do not contain any valid: ' + str(val), level=Qgis.Critical, duration=10)
+                        #self.iface.messageBar().pushMessage("Error", 'These selected GBS_ID\'s do not contain any valid: ' + str(val), level=Qgis.Critical, duration=10)
                         raise ValueError(
                             'These selected GBS_ID\'s do not contain any valid: ' + str(val))
                 else:
@@ -466,7 +466,7 @@ class PRW_Data_Opvrager:
                         mtg_df_all = pd.concat(df_list, ignore_index=True)
                         return mtg_df_all
                     else:
-                        self.iface.messageBar().pushMessage("Error", 'Deze PBS_IDS hebben geen meetgegevens tussen '\
+                        #self.iface.messageBar().pushMessage("Error", 'Deze PBS_IDS hebben geen meetgegevens tussen '\
                                  + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val), level=Qgis.Critical, duration=10)
                         raise ValueError(
                             'Deze PBS_IDS hebben geen meetgegevens tussen '\
