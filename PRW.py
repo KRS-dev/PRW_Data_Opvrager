@@ -467,7 +467,7 @@ class PRW_Data_Opvrager:
                         return mtg_df_all
                     else:
                         #self.iface.messageBar().pushMessage("Error", 'Deze PBS_IDS hebben geen meetgegevens tussen '\
-                                 + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val), level=Qgis.Critical, duration=10)
+                        #         + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val), level=Qgis.Critical, duration=10)
                         raise ValueError(
                             'Deze PBS_IDS hebben geen meetgegevens tussen '\
                                  + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val))
