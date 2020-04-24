@@ -30,7 +30,7 @@ from .resources import *
 # Import the code for the dialog
 from .PRW_dialog import PRW_Data_OpvragerDialog
 from qgis.core import (
-    QgsDataSourceUri, QgsCredentials, 
+    QgsDataSourceUri, QgsCredentials,
     QgsTask, QgsApplication, QgsMessageLog, Qgis)
 
 import os
