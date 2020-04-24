@@ -303,7 +303,7 @@ class PRW_Data_Opvrager:
     def run_task(self):
         progDialog = QProgressDialog('Running Task in the background...', 'Cancel', 0, 100)
         self.task = HeavyLifting('PRW Database Bevraging', self)
-        progDialog.canceled.connect(self.task.cancel)
+        #progDialog.canceled.connect(self.task.cancel)
         progDialog.show()
         self.task.begun.connect(lambda: progDialog.setLabelText('Begonnen met PRW peilbuisgegevens ophalen...'))
         self.task.progressChanged.connect(lambda: progDialog.setValue(self.task.progress()))
@@ -699,7 +699,7 @@ class HeavyLifting(QgsTask):
                 'Task "{name}" completed ' \
                 'in {duration} seconds'.format(
                     name=self.description(),
-                    duration=self.elapsedTime()
+                    duration=round(self.elapsedTime()/1000, 2)
                 ), 'test', Qgis.Success)
         else:
             if self.exception is None:
