@@ -303,7 +303,7 @@ class PRW_Data_Opvrager:
     def run_task(self):
         progDialog = QProgressDialog('Running Task in the background...', 'Cancel', 0, 100)
         self.task = HeavyLifting('PRW Database Bevraging', self)
-        #progDialog.canceled.connect(self.task.cancel)
+        progDialog.rejected.connect(self.task.cancel)
         progDialog.show()
         self.task.begun.connect(lambda: progDialog.setLabelText('Begonnen met PRW peilbuisgegevens ophalen...'))
         self.task.progressChanged.connect(lambda: progDialog.setValue(self.task.progress()))
@@ -369,13 +369,11 @@ class PRW_Data_Opvrager:
                 try:
                     pbs_ids.append(f.attribute('ID'))
                 except KeyError:
-                    self.iface.messageBar().pushMessage("Error", 'This layer does not contain an attribute called \'ID\'.', level=Qgis.Critical, duration=10)
                     raise KeyError(
-                        'This layer does not contain an attribute called \'ID\'.')
+                        'Deze laag heeft geen attribute \'ID\'.')
             return pbs_ids
         else:
-            #self.iface.messageBar().pushMessage("Error", 'No features were selected in the layer.', level=Qgis.Critical, duration=10)
-            raise KeyError('No features were selected in the layer.')
+            raise KeyError('Geen features zijn geselecteerd in de aangewezen laag.')
 
     def get_peilbuizen(self, pbs_ids):
         '''Setting up the queries to fetch all data from the PRW_Peilbuizen table and processing the data as a pandas.DataFrame.'''
@@ -409,9 +407,8 @@ class PRW_Data_Opvrager:
                         pbs_df_all = pd.concat(df_list, ignore_index=True)
                         return pbs_df_all
                     else:
-                        #self.iface.messageBar().pushMessage("Error", 'These selected GBS_ID\'s do not contain any valid: ' + str(val), level=Qgis.Critical, duration=10)
                         raise ValueError(
-                            'These selected GBS_ID\'s do not contain any valid: ' + str(val))
+                            'These selected PBS_ID\'s do not contain any valid: ' + str(val))
                 else:
                     raise TypeError('not all inputs are integers')
             else:
@@ -466,11 +463,8 @@ class PRW_Data_Opvrager:
                         mtg_df_all = pd.concat(df_list, ignore_index=True)
                         return mtg_df_all
                     else:
-                        #self.iface.messageBar().pushMessage("Error", 'Deze PBS_IDS hebben geen meetgegevens tussen '\
-                        #         + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val), level=Qgis.Critical, duration=10)
-                        raise ValueError(
-                            'Deze PBS_IDS hebben geen meetgegevens tussen '\
-                                 + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val))
+                        raise ValueError('Deze PBS_IDS hebben geen meetgegevens tussen '\
+                            + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val))
                 else:
                     raise TypeError('not all inputs are integers')
             else:
@@ -523,7 +517,6 @@ class PRW_Data_Opvrager:
 
 class HeavyLifting(QgsTask):
     """This shows how to subclass QgsTask"""
-
 
     def __init__(self, description, PRW_Data_Opvrager):
         QgsTask.__init__(self, description, QgsTask.CanCancel)
