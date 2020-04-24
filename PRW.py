@@ -307,8 +307,8 @@ class PRW_Data_Opvrager:
         progDialog.show()
         self.task.begun.connect(lambda: progDialog.setLabelText('Begonnen met PRW peilbuisgegevens ophalen...'))
         self.task.progressChanged.connect(lambda: progDialog.setValue(self.task.progress()))
-        self.task.taskCompleted.connect(progDialog.close)
-        self.task.taskTerminated.connect(progDialog.close)
+        #self.task.taskCompleted.connect(progDialog.close)
+        #self.task.taskTerminated.connect(progDialog.close)
         QgsApplication.taskManager().addTask(self.task)      
 
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
