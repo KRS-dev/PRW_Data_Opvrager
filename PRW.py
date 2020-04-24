@@ -353,12 +353,7 @@ class PRW_Data_Opvrager:
         ) as dbcon:
             
             cur = dbcon.cursor()
-            try:
-                cur.execute(query, data)
-            except cora.DatabaseError as e:
-                errorObj, = e.args
-                errorMessage = errorObj.message
-                raise e(errorMessage)
+            cur.execute(query, data)
             fetched = cur.fetchall()
             description = cur.description
             return fetched, description
