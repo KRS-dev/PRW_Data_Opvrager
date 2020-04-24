@@ -304,6 +304,7 @@ class PRW_Data_Opvrager:
         progDialog = QProgressDialog('Running Task in the background...', 'Cancel', 0, 100)
         self.task = HeavyLifting('PRW Database Bevraging', self)
         progDialog.canceled.connect(self.task.cancel)
+        progDialog.show()
         self.task.begun.connect(lambda: progDialog.setLabelText('Begonnen met PRW peilbuisgegevens ophalen...'))
         self.task.progressChanged.connect(lambda: progDialog.setValue(self.task.progress()))
         self.task.taskCompleted.connect(progDialog.close)
@@ -547,6 +548,8 @@ class HeavyLifting(QgsTask):
     def get_data(self):
         """ This function runs the heavy code in the background."""
         '''Fetch data and write it off to an excel file in the selected file location.'''
+        self.setProgress(0)
+        
         # Use the fetch functions to collect all the data
         pbs_ids         =   self.PRW.get_pbs_ids(self.PRW.selected_layer)
         pbs_ids         =   [int(x) for x in pbs_ids]
