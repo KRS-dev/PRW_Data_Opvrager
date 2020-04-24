@@ -307,8 +307,6 @@ class PRW_Data_Opvrager:
         progDialog.show()
         self.task.begun.connect(lambda: progDialog.setLabelText('Begonnen met PRW peilbuisgegevens ophalen...'))
         self.task.progressChanged.connect(lambda: progDialog.setValue(self.task.progress()))
-        #self.task.taskCompleted.connect(progDialog.close)
-        #self.task.taskTerminated.connect(progDialog.close)
         QgsApplication.taskManager().addTask(self.task)      
 
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
@@ -522,6 +520,7 @@ class HeavyLifting(QgsTask):
         QgsTask.__init__(self, description, QgsTask.CanCancel)
         self.PRW = PRW_Data_Opvrager
         self.exception = None
+        self.MESSAGE_CATEGORY = 'PRW_Data_Opvrager'
     
     def run(self):
         """This function is where you do the 'heavy lifting' or implement
@@ -693,7 +692,7 @@ class HeavyLifting(QgsTask):
                 'in {duration} seconds'.format(
                     name=self.description(),
                     duration=round(self.elapsedTime()/1000, 2)
-                ), 'test', Qgis.Success)
+                ), self.MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
                 QgsMessageLog.logMessage(
@@ -701,18 +700,18 @@ class HeavyLifting(QgsTask):
                     'exception (probably the task was manually '\
                     'canceled by the user)'.format(
                         name=self.description()),
-                    'test', Qgis.Warning)
+                    self.MESSAGE_CATEGORY, Qgis.Warning)
             else:
                 QgsMessageLog.logMessage(
                     'Task "{name}" threw an Exception: {exception}'.format(
                         name=self.description(),
                         exception=self.exception),
-                    'test', Qgis.Critical)
+                    self.MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
     
     def cancel(self):
         QgsMessageLog.logMessage(
             'Task "{name}" canceled by the user\n'.format(
             name=self.description()
-            ), 'test', Qgis.Info)
+            ), self.MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()
