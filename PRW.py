@@ -374,7 +374,7 @@ class PRW_Data_Opvrager:
                         'This layer does not contain an attribute called \'ID\'.')
             return pbs_ids
         else:
-            self.iface.messageBar().pushMessage("Error", 'No features were selected in the layer.', level=Qgis.Critical, duration=10)
+            #self.iface.messageBar().pushMessage("Error", 'No features were selected in the layer.', level=Qgis.Critical, duration=10)
             raise KeyError('No features were selected in the layer.')
 
     def get_peilbuizen(self, pbs_ids):
