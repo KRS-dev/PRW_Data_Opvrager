@@ -229,6 +229,14 @@ class PRW_Data_Opvrager:
             source = self.selected_layer.source()
             uri = QgsDataSourceUri(source)
 
+            '''if uri.hasparam('database') is False:
+                e = Error('De geselecteerde laag heeft geen database connectie.')
+                raise e
+                self.dlg.ErrorLabel.setLabelText(e)
+                result = False
+                self.dlg.show()
+                return'''
+
             savedUsername = uri.hasparam('username')
             savedPassword = uri.hasparam('password')
 
