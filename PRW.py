@@ -236,7 +236,7 @@ class PRW_Data_Opvrager:
                 QgsMessageLog.logMessage(
                     '{Dialog} threw an Exception: {exception}'.format(
                         exception=e,
-                        Dialog=self.__name__),
+                        Dialog=self.__class__.__name__),
                     MESSAGE_CATEGORY, Qgis.Critical)
                 return
             
