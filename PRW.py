@@ -228,15 +228,18 @@ class PRW_Data_Opvrager:
             
             source = self.selected_layer.source()
             uri = QgsDataSourceUri(source)
-
-            if uri.hasParam('database') is False:
-                e = Error('De geselecteerde laag heeft geen database connectie.')
-                raise e
+            try:
+                assert len(uri.database()) != 0, '"{layer}" heeft geen connectie met een database.'.format(layer=self.selected_layer.name())
+                assert self.selected_layer.selectedFeatureCount() != 0, 'Geen Objecten zijn geselecteerd in laag: "{layer}".'.format(layer=self.selected_layer.name())
+            except Exception as e:
+                QgsMessageLog.logMessage(
+                    '{Dialog} threw an Exception: {exception}'.format(
+                        exception=e,
+                        Dialog=self),
+                    self.MESSAGE_CATEGORY, Qgis.Critical)
                 self.dlg.ErrorLabel.setLabelText(e)
-                result = False
-                self.dlg.show()
-                return
-
+                raise e
+            
             savedUsername = uri.hasParam('username')
             savedPassword = uri.hasParam('password')
 
@@ -333,7 +336,8 @@ class PRW_Data_Opvrager:
             description = cur.description
             return fetched, description
 
-    def get_pbs_ids(self, qgisLayer):
+    @staticmethod
+    def get_pbs_ids(qgisLayer):
         '''Extract from the selected peilbuizen in the layer the id's.'''
         pbs_ids = []
         features = qgisLayer.selectedFeatures()
@@ -348,7 +352,7 @@ class PRW_Data_Opvrager:
             return pbs_ids
         else:
             raise KeyError('Geen features zijn geselecteerd in de aangewezen laag.')
-
+    
     def get_peilbuizen(self, pbs_ids):
         '''Setting up the queries to fetch all data from the PRW_Peilbuizen table and processing the data as a pandas.DataFrame.'''
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
@@ -363,7 +367,7 @@ class PRW_Data_Opvrager:
                     df_list = []
                     for chunk in chunks:
                         values = chunk
-                        bindValues = [':' + str(i+1) for i in range(len(values))] # Creates bindvalues list as [:1, :2, :3, ...]
+                        bindValues = [':' + str(i + 1) for i in range(len(values))] # Creates bindvalues list as [:1, :2, :3, ...]
                         
                         # Bindvalues are directly injected into the query.
                         query = 'SELECT id, buiscode||\'-\'||p.volgnummer PEILBUIS, buiscode_project, inw_diameter, hoogte_meetmerk, nul_meting, hoogte_maaiveld, bovenkant_filter, lengte_buis, hoogte_bov_buis, toel_afwijking, btp_code, meetmerk, plaatsbepaling, datum_start, datum_eind, datum_vervallen, ind_plaatsing, x_coordinaat, y_coordinaat, last_updated_by, last_update_date, created_by, creation_date, mat_code, geometrie '\
@@ -446,7 +450,8 @@ class PRW_Data_Opvrager:
         else:
             raise TypeError('Input is not a list or tuple')
     
-    def PbStats(self, df_in, decimals=2):
+    @staticmethod
+    def PbStats(df_in, decimals=2):
         """This function creates standard statistics for datasets
         Arguments:
         - filename
