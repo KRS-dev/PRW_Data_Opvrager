@@ -212,18 +212,6 @@ class PRW_Data_Opvrager:
             filename_validator = QRegExpValidator(rx2)
             self.dlg.FileName.setValidator(filename_validator)
 
-        # Look for all connected databases in Qgis
-        settings = QSettings()
-        allkeys = settings.allKeys()
-        databases = [k for k in allkeys if 'database' in k]
-        databaseNames = [settings.value(k) for k in databases]
-        # Holding on to the previous current index.
-        cur_i = self.dlg.DatabaseComboBox.currentIndex()
-        self.dlg.DatabaseComboBox.clear()
-        self.dlg.DatabaseComboBox.addItems(databaseNames)
-        # On first_start there would be no previous current index and currentIndex would return -1
-        if cur_i != -1:
-            self.dlg.DatabaseComboBox.setCurrentIndex(cur_i)
 
         # show the dialog
         self.dlg.show()
@@ -233,48 +221,25 @@ class PRW_Data_Opvrager:
         if result:
             # Extracting values from the dialog form
             self.selected_layer = self.dlg.MapLayerComboBox.currentLayer()
-            self.database = self.dlg.DatabaseComboBox.currentText()
             self.dateMax = self.dlg.DateMax.date().toString('yyyy-MM-dd')
             self.dateMin = self.dlg.DateMin.date().toString('yyyy-MM-dd')
             self.fileName = self.dlg.FileName.text()
             self.outputLocation = self.dlg.OutputLocation.filePath()
             
-            # Retrieving necessary database info through the QSettings
-            settings = QSettings()
-            # All settings in Qgis have a key and a value
-            # allKeys() will find all global keys in het project
-            allkeys = settings.allKeys()
-            allvalues = [settings.value(k) for k in allkeys]
-            allsettings = dict(zip(allkeys, allvalues))
-            # Getting the key that forms a pair with the selected database name
-            for key, val in allsettings.items():
-                if 'database' in key:
-                    if val == self.database:
-                        databasekey = key
-            # Keys from the same database are stored hierarchical as:
-            # Oracle/connections/database_name/database_key_name ... etc.
-            # Here we want all keys related to database_name  
-            databasekey = databasekey.rstrip('database')
-            selected_databasekeys = [k for k in allkeys if databasekey in k]
-            host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
-            port = settings.value([k for k in selected_databasekeys if 'port' in k][0], 1521)
-            self.dsn = cora.makedsn(host, port, service_name=self.database)
-           
-            saveUsername = settings.value([k for k in selected_databasekeys if 'saveUsername' in k][0], None)
-            savePassword = settings.value([k for k in selected_databasekeys if 'savePassword' in k][0], None)
-            self.username = None
-            self.password = None
-            if saveUsername == 'true':
-                saveUsername = True
-                self.username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
-            if savePassword == 'true':
-                savePassword = True
-                self.password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
+            source = self.selected_layer.source()
+            uri = QgsDataSourceUri(source)
+
+            savedUsername = uri.hasparam('username')
+            savedPassword = uri.hasparam('password')
+
+            self.username = uri.username()
+            self.password = uri.password()
+            self.dsn = cora.makedsn(host=uri.host(), port=uri.port(), service_name=uri.database())
             
             errorMessage = None
             # If we have a username and password try to connect, otherwise ask for credentials
             # if the connection fails store the error and show dialog screen for credentials input
-            if saveUsername is True and savePassword is True:
+            if savedUsername is True and savedPassword is True:
                 try:
                     self.check_connection()
                     self.run_task()
@@ -659,7 +624,8 @@ class HeavyLifting(QgsTask):
                 'name':             'Grondwaterstand in mNAP',
                 'name_font':        {'size': 14, 'bold': True},
                 'major_gridlines':  {'visible': True},
-                'crossing':         minGWS//1
+                'crossing':         minGWS//1,
+                'min':              minGWS//1
             })
             chart.set_size({'x_scale': 2, 'y_scale': 1.5})
             chart.set_legend({'font': {'size': 12, 'bold': True}})
