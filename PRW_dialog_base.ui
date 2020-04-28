@@ -35,7 +35,7 @@
      <x>20</x>
      <y>10</y>
      <width>351</width>
-     <height>223</height>
+     <height>225</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -51,19 +51,6 @@
     </item>
     <item>
      <widget class="QgsMapLayerComboBox" name="MapLayerComboBox"/>
-    </item>
-    <item>
-     <widget class="QLabel" name="label_3">
-      <property name="text">
-       <string>Selecteer de ProWat Database:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QComboBox" name="DatabaseComboBox"/>
     </item>
     <item>
      <widget class="QLabel" name="label_6">
