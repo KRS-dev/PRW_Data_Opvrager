@@ -229,13 +229,13 @@ class PRW_Data_Opvrager:
             source = self.selected_layer.source()
             uri = QgsDataSourceUri(source)
 
-            '''if uri.hasParam('database') is False:
+            if uri.hasParam('database') is False:
                 e = Error('De geselecteerde laag heeft geen database connectie.')
                 raise e
                 self.dlg.ErrorLabel.setLabelText(e)
                 result = False
                 self.dlg.show()
-                return'''
+                return
 
             savedUsername = uri.hasParam('username')
             savedPassword = uri.hasParam('password')
@@ -455,7 +455,7 @@ class PRW_Data_Opvrager:
         """
 
         # Create empty dataframe with all desired statistics
-        df_stats = pd.DataFrame(columns=['PEILBUIS','Aantal metingen', 'Start datum', 'Eind datum', 'Maximaal gemeten', '95-percentiel', 'Gemiddelde',
+        df_stats = pd.DataFrame(columns=['PEILBUIS','Aantal metingen', 'Start datum', 'Eind datum', 'Maximaal gemeten', '95-percentiel', '70-percentiel', 'Gemiddelde',
                                         '5-percentiel', 'Minimaal gemeten'], dtype='float')
         
         df_stats['PEILBUIS'] = df_in['PEILBUIS'].unique()  # Add all points to dataframe
@@ -467,6 +467,7 @@ class PRW_Data_Opvrager:
             df2 = df_in.loc[df_in['PEILBUIS']==pb]         # Select part of full dataframe to calculate statistics
             df_stats.loc[df_stats['PEILBUIS']==pb, ['Maximaal gemeten']]    = df2['MEETWAARDE'].max()
             df_stats.loc[df_stats['PEILBUIS']==pb, ['95-percentiel']]       = df2['MEETWAARDE'].quantile(0.95)
+            df_stats.loc[df_stats['PEILBUIS']==pb, ['70-percentiel']]       = df2['MEETWAARDE'].quantile(0.70)
             df_stats.loc[df_stats['PEILBUIS']==pb, ['Gemiddelde']]          = df2['MEETWAARDE'].mean()
             df_stats.loc[df_stats['PEILBUIS']==pb, ['5-percentiel']]        = df2['MEETWAARDE'].quantile(0.05)
             df_stats.loc[df_stats['PEILBUIS']==pb, ['Minimaal gemeten']]    = df2['MEETWAARDE'].min()
