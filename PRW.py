@@ -233,11 +233,6 @@ class PRW_Data_Opvrager:
                 assert self.selected_layer.selectedFeatureCount() != 0, 'Geen Objecten zijn geselecteerd in laag: "{layer}".'.format(layer=self.selected_layer.name())
             except Exception as e:
                 self.iface.messageBar().pushMessage("Error", str(e), level=2, duration=5)
-                QgsMessageLog.logMessage(
-                    '{Dialog} threw an Exception: {exception}'.format(
-                        exception=e,
-                        Dialog=self.__class__.__name__),
-                    MESSAGE_CATEGORY, Qgis.Critical)
                 return
             
             savedUsername = uri.hasParam('username')
@@ -501,6 +496,7 @@ class HeavyLifting(QgsTask):
     def __init__(self, description, PRW_Data_Opvrager):
         QgsTask.__init__(self, description, QgsTask.CanCancel)
         self.PRW = PRW_Data_Opvrager
+        self.iface = self.PRW.iface
         self.exception = None
         self.MESSAGE_CATEGORY = 'PRW_Data_Opvrager'
     
@@ -670,31 +666,30 @@ class HeavyLifting(QgsTask):
         """ This function is called automatically when the task is completed and is 
         called from the main thread so it is safe to interact with the GUI etc here"""
         if result:
-            QgsMessageLog.logMessage(
-                'Task "{name}" completed ' \
+            self.iface.messageBar().pushMessage('Task "{name}" completed ' \
                 'in {duration} seconds'.format(
                     name=self.description(),
-                    duration=round(self.elapsedTime()/1000, 2)
-                ), self.MESSAGE_CATEGORY, Qgis.Success)
+                    duration=round(self.elapsedTime()/1000, 2)),
+                level=Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Task "{name}" not successful but without '\
+                self.iface.messageBar().pushMessage(
+                    'Task "{name}" not succesful but without '\
                     'exception (probably the task was manually '\
-                    'canceled by the user)'.format(
+                    'canceled by the user'.format(
                         name=self.description()),
                     self.MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(
+                self.iface.messageBar().pushMessage(
                     'Task "{name}" threw an Exception: {exception}'.format(
                         name=self.description(),
                         exception=self.exception),
-                    self.MESSAGE_CATEGORY, Qgis.Critical)
+                    self.MESSAGE_CATEGORY, Qgis.Critical)  
                 raise self.exception
     
     def cancel(self):
-        QgsMessageLog.logMessage(
+        self.iface.messageBar().pushMessage(
             'Task "{name}" canceled by the user\n'.format(
-            name=self.description()
-            ), self.MESSAGE_CATEGORY, Qgis.Info)
+                name=self.description()),
+            self.MESSAGE_CATEGORY, Qgis.Info)  
         super().cancel()
