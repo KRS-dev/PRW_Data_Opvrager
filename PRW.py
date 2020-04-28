@@ -240,9 +240,12 @@ class PRW_Data_Opvrager:
             savedUsername = uri.hasParam('username')
             savedPassword = uri.hasParam('password')
 
+            host = uri.host()
+            port = uri.port()
+            database = uri.database()
             self.username = uri.username()
             self.password = uri.password()
-            self.dsn = cora.makedsn(host=uri.host(), port=uri.port(), service_name=uri.database())
+            self.dsn = cora.makedsn(host=host, port=port, service_name=database)
             
             errorMessage = None
             # If we have a username and password try to connect, otherwise ask for credentials
