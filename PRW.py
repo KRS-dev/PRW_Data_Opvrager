@@ -213,7 +213,7 @@ class PRW_Data_Opvrager:
             self.dlg.FileName.setValidator(filename_validator)
 
 
-        # show the dialog
+        # Show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
@@ -232,13 +232,13 @@ class PRW_Data_Opvrager:
                 assert len(uri.database()) != 0, '"{layer}" heeft geen connectie met een database.'.format(layer=self.selected_layer.name())
                 assert self.selected_layer.selectedFeatureCount() != 0, 'Geen Objecten zijn geselecteerd in laag: "{layer}".'.format(layer=self.selected_layer.name())
             except Exception as e:
+                self.iface.messageBar().pushMessage("Error", str(e), level=2, duration=5)
                 QgsMessageLog.logMessage(
                     '{Dialog} threw an Exception: {exception}'.format(
                         exception=e,
-                        Dialog=self),
+                        Dialog=self.__name__),
                     MESSAGE_CATEGORY, Qgis.Critical)
-                self.dlg.ErrorLabel.setText(str(e))
-                raise e
+                return
             
             savedUsername = uri.hasParam('username')
             savedPassword = uri.hasParam('password')

@@ -40,13 +40,6 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QLabel" name="ErrorLabel">
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="QLabel" name="label_4">
       <property name="text">
        <string>Selecteer de laag met Peilbuis ID's:</string>
