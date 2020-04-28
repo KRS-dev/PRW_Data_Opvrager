@@ -237,7 +237,7 @@ class PRW_Data_Opvrager:
                         exception=e,
                         Dialog=self),
                     MESSAGE_CATEGORY, Qgis.Critical)
-                self.dlg.ErrorLabel.setLabelText(e)
+                self.dlg.ErrorLabel.setText(e)
                 raise e
             
             savedUsername = uri.hasParam('username')
