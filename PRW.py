@@ -492,7 +492,8 @@ class PRW_Data_Opvrager:
         return df_stats
 
 class HeavyLifting(QgsTask):
-    """This shows how to subclass QgsTask"""
+    """This subclass of QgsTask will do all the work in the background on a seperate thread.
+    In the meantime Qgis will still be able to run normally."""
 
     def __init__(self, description, PRW_Data_Opvrager):
         QgsTask.__init__(self, description, QgsTask.CanCancel)
@@ -594,8 +595,12 @@ class HeavyLifting(QgsTask):
             ## Adding the meetgegevens per peilbuis to the same Excelsheet
             chart = workbook.add_chart({'type': 'line'})
             prw_meetgeg_sheetname = 'PRW_Peilbuis_Meetgegevens'
-            col = 0
-            for pbs in df_meetgegevens['PEILBUIS'].unique():
+            
+            unique_peilbuizen = df_meetgegevens['PEILBUIS'].unique()
+            prog_step = 20 / len(unique_peilbuizen)
+            prog = 60
+            col = 0 
+            for pbs in unique_peilbuizen:
                 # Parsing data per Peilbuis
                 df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
                 df_temp = df_temp[['DATUM_METING', 'MEETWAARDE']].dropna(subset=['MEETWAARDE'])
@@ -617,7 +622,8 @@ class HeavyLifting(QgsTask):
                 })
                 
                 col = col + 3
-
+                prog = prog + prog_step
+                self.setProgress(round(prog))
                 if self.isCanceled():
                     return False
         
