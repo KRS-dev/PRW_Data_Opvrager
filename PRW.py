@@ -231,6 +231,7 @@ class PRW_Data_Opvrager:
             try:
                 assert len(uri.database()) != 0, '"{layer}" heeft geen connectie met een database.'.format(layer=self.selected_layer.name())
                 assert self.selected_layer.selectedFeatureCount() != 0, 'Geen Objecten zijn geselecteerd in laag: "{layer}".'.format(layer=self.selected_layer.name())
+                assert len(self.fileName) != 0, 'Er is geen Excel Bestand Naam opgegeven.'
             except Exception as e:
                 self.iface.messageBar().pushMessage("Error", str(e), level=2, duration=5)
                 return
