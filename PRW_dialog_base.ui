@@ -179,7 +179,13 @@
        <string/>
       </property>
       <property name="defaultRoot">
-       <string>C:\Users\Desktop\Desktop\</string>
+       <string/>
+      </property>
+      <property name="storageMode">
+       <enum>QgsFileWidget::GetDirectory</enum>
+      </property>
+      <property name="relativeStorage">
+       <enum>QgsFileWidget::RelativeProject</enum>
       </property>
      </widget>
     </item>
