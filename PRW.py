@@ -689,7 +689,7 @@ class HeavyLifting(QgsTask):
     
     def cancel(self):
         self.iface.messageBar().pushMessage(
-            'Task "{name}" canceled by the user\n'.format(
+            'Task "{name}" canceled by the user.'.format(
                 name=self.description()),
             self.MESSAGE_CATEGORY, Qgis.Info)  
         super().cancel()
