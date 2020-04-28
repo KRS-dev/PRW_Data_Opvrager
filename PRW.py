@@ -501,7 +501,7 @@ class HeavyLifting(QgsTask):
         self.iface = self.PRW.iface
         self.exception = None
         self.MESSAGE_CATEGORY = 'PRW_Data_Opvrager'
-    
+ 
     def run(self):
         """This function is where you do the 'heavy lifting' or implement
         the task which you want to run in a background thread. This function 
