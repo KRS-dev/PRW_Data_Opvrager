@@ -39,7 +39,7 @@ import pandas as pd
 import cx_Oracle as cora
 import time
 
-
+MESSAGE_CATEGORY = 'PRW_Data_Opvrager'
 
 class PRW_Data_Opvrager:
     """QGIS Plugin Implementation."""
@@ -236,7 +236,7 @@ class PRW_Data_Opvrager:
                     '{Dialog} threw an Exception: {exception}'.format(
                         exception=e,
                         Dialog=self),
-                    self.MESSAGE_CATEGORY, Qgis.Critical)
+                    MESSAGE_CATEGORY, Qgis.Critical)
                 self.dlg.ErrorLabel.setLabelText(e)
                 raise e
             
