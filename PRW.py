@@ -41,6 +41,7 @@ import time
 
 MESSAGE_CATEGORY = 'PRW_Data_Opvrager'
 
+
 class PRW_Data_Opvrager:
     """QGIS Plugin Implementation."""
 
@@ -103,16 +104,16 @@ class PRW_Data_Opvrager:
         return QCoreApplication.translate('PRW_Data_Opvrager', message)
 
     def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
+            self,
+            icon_path,
+            text,
+            callback,
+            enabled_flag=True,
+            add_to_menu=True,
+            add_to_toolbar=True,
+            status_tip=None,
+            whats_this=None,
+            parent=None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -206,12 +207,12 @@ class PRW_Data_Opvrager:
             self.first_start = False
             self.dlg = PRW_Data_OpvragerDialog()
             self.dlg.OutputLocation.setStorageMode(1)
-            self.dlg.OutputLocation.setFilePath(self.dlg.OutputLocation.defaultRoot())
+            self.dlg.OutputLocation.setFilePath(
+                self.dlg.OutputLocation.defaultRoot())
             # Set a validator on the filename lineEdit so that no random signs can be put in.
             rx2 = QRegExp(r"^[\w\-. ]+$")
             filename_validator = QRegExpValidator(rx2)
             self.dlg.FileName.setValidator(filename_validator)
-
 
         # Show the dialog
         self.dlg.show()
@@ -225,17 +226,20 @@ class PRW_Data_Opvrager:
             self.dateMin = self.dlg.DateMin.date().toString('yyyy-MM-dd')
             self.fileName = self.dlg.FileName.text()
             self.outputLocation = self.dlg.OutputLocation.filePath()
-            
+
             source = self.selected_layer.source()
             uri = QgsDataSourceUri(source)
             try:
-                assert len(uri.database()) != 0, '"{layer}" heeft geen connectie met een database.'.format(layer=self.selected_layer.name())
-                assert self.selected_layer.selectedFeatureCount() != 0, 'Geen Objecten zijn geselecteerd in laag: "{layer}".'.format(layer=self.selected_layer.name())
-                assert len(self.fileName) != 0, 'Er is geen Excel Bestand Naam opgegeven.'
+                assert len(uri.database()) != 0, '"{layer}" heeft geen connectie met een database.'.format(
+                    layer=self.selected_layer.name())
+                assert self.selected_layer.selectedFeatureCount(
+                ) != 0, 'Geen Objecten zijn geselecteerd in laag: "{layer}".'.format(layer=self.selected_layer.name())
+                assert len(
+                    self.fileName) != 0, 'Er is geen Excel Bestand Naam opgegeven.'
             except Exception as e:
                 self.iface.messageBar().pushMessage("Error", str(e), level=2, duration=5)
                 return
-            
+
             savedUsername = uri.hasParam('username')
             savedPassword = uri.hasParam('password')
 
@@ -244,8 +248,9 @@ class PRW_Data_Opvrager:
             database = uri.database()
             self.username = uri.username()
             self.password = uri.password()
-            self.dsn = cora.makedsn(host=host, port=port, service_name=database)
-            
+            self.dsn = cora.makedsn(
+                host=host, port=port, service_name=database)
+
             errorMessage = None
             # If we have a username and password try to connect, otherwise ask for credentials
             # if the connection fails store the error and show dialog screen for credentials input
@@ -259,29 +264,35 @@ class PRW_Data_Opvrager:
                     success = 'false'
                     while success == 'false':
                         success, errorMessage = \
-                            self.get_credentials(host, port, self.database, message=errorMessage)
+                            self.get_credentials(
+                                host, port, self.database, message=errorMessage)
                     if success == 'exit':
                         pass
                     elif success == 'true':
                         self.run_task()
             else:
                 success, errorMessage = \
-                    self.get_credentials(host, port, self.database, username=self.username, password=self.password)
+                    self.get_credentials(
+                        host, port, self.database, username=self.username, password=self.password)
                 while success == 'false':
                     success, errorMessage = \
-                        self.get_credentials(host, port, self.database, username=self.username, password=self.password, message=errorMessage)
+                        self.get_credentials(
+                            host, port, self.database, username=self.username, password=self.password, message=errorMessage)
                 if success == 'exit':
                     pass
                 elif success == 'true':
                     self.run_task()
 
     def run_task(self):
-        progDialog = QProgressDialog('Running Task in the background...', 'Cancel', 0, 100)
+        progDialog = QProgressDialog(
+            'Running Task in the background...', 'Cancel', 0, 100)
         task = HeavyLifting('PRW Database Bevraging', self)
         progDialog.canceled.connect(task.cancel)
         progDialog.show()
-        task.begun.connect(lambda: progDialog.setLabelText('Begonnen met PRW peilbuisgegevens ophalen...'))
-        task.progressChanged.connect(lambda: progDialog.setValue(task.progress()))
+        task.begun.connect(lambda: progDialog.setLabelText(
+            'Begonnen met PRW peilbuisgegevens ophalen...'))
+        task.progressChanged.connect(
+            lambda: progDialog.setValue(task.progress()))
         QgsApplication.taskManager().addTask(task)
 
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
@@ -292,7 +303,8 @@ class PRW_Data_Opvrager:
 
         errorMessage = None
         # Pops up a Credentials dialog, ok returns True if 'ok' on the dialog is pressed
-        (ok, user, passwd) = QgsCredentials.instance().get(connInfo, username, password, message)
+        (ok, user, passwd) = QgsCredentials.instance().get(
+            connInfo, username, password, message)
         if ok:
             self.username = user
             self.password = passwd
@@ -306,7 +318,7 @@ class PRW_Data_Opvrager:
                 return 'false', errorMessage
         else:
             return 'exit', errorMessage
-    
+
     def check_connection(self):
         '''Checks the Oracle database connection. 
         cx_Oracle.databaseError's are thrown out if the connection does not work.'''
@@ -317,15 +329,15 @@ class PRW_Data_Opvrager:
             dsn=self.dsn
         ):
             pass
-    
+
     def fetch(self, query, data):
         '''Fetch queries with the data in bindValues.'''
         with cora.connect(
             user=self.username,
-            password=self.password, 
+            password=self.password,
             dsn=self.dsn
         ) as dbcon:
-            
+
             cur = dbcon.cursor()
             cur.execute(query, data)
             fetched = cur.fetchall()
@@ -347,8 +359,9 @@ class PRW_Data_Opvrager:
                         'Deze laag heeft geen attribute \'ID\'.')
             return pbs_ids
         else:
-            raise KeyError('Geen features zijn geselecteerd in de aangewezen laag.')
-    
+            raise KeyError(
+                'Geen features zijn geselecteerd in de aangewezen laag.')
+
     def get_peilbuizen(self, pbs_ids):
         '''Setting up the queries to fetch all data from the PRW_Peilbuizen table and processing the data as a pandas.DataFrame.'''
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
@@ -356,15 +369,17 @@ class PRW_Data_Opvrager:
                 if(all(isinstance(x, int) for x in pbs_ids)):
                     val = list(pbs_ids)
 
-                    # Bindvalues are used in the queries to prevent SQL-injection. 
+                    # Bindvalues are used in the queries to prevent SQL-injection.
                     # Queries with more than 1000 bindvalues raise an error in cx_Oracle, robustness is built in by creating chunks
                     # More info about bindvalues can be found in the cx_Oracle docs.
                     chunks = [val[x:x+1000] for x in range(0, len(val), 1000)]
                     df_list = []
                     for chunk in chunks:
                         values = chunk
-                        bindValues = [':' + str(i + 1) for i in range(len(values))] # Creates bindvalues list as [:1, :2, :3, ...]
-                        
+                        # Creates bindvalues list as [:1, :2, :3, ...]
+                        bindValues = [':' + str(i + 1)
+                                      for i in range(len(values))]
+
                         # Bindvalues are directly injected into the query.
                         query = 'SELECT id, buiscode||\'-\'||p.volgnummer PEILBUIS, buiscode_project, inw_diameter, hoogte_meetmerk, nul_meting, hoogte_maaiveld, bovenkant_filter, lengte_buis, hoogte_bov_buis, toel_afwijking, btp_code, meetmerk, plaatsbepaling, datum_start, datum_eind, datum_vervallen, ind_plaatsing, x_coordinaat, y_coordinaat, last_updated_by, last_update_date, created_by, creation_date, mat_code, geometrie '\
                             + 'FROM prw.prw_peilbuizen p '\
@@ -375,7 +390,7 @@ class PRW_Data_Opvrager:
                             colnames = [desc[0] for desc in description]
                             pbs_df.columns = colnames
                             df_list.append(pbs_df)
-                    
+
                     # If df_list contains any dataframes
                     if df_list:
                         pbs_df_all = pd.concat(df_list, ignore_index=True)
@@ -389,99 +404,113 @@ class PRW_Data_Opvrager:
                 raise ValueError('No pbs_ids were supplied.')
         else:
             raise TypeError('Input is not a list or tuple')
-    
+
     def get_meetgegevens(self, pbs_ids):
         '''This method sets up the queries to fetch all data from the PRW_Meetgegevens table.
         It will processing the data as a pandas.Dataframe.
         Argruments:
         - PBS_ID's 
-        
         '''
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
             if len(pbs_ids) > 0:
                 if(all(isinstance(x, int) for x in pbs_ids)):
                     val = list(pbs_ids)
-                    
-                    # Bindvalues are used in the queries to prevent SQL-injection. 
+
+                    # Bindvalues are used in the queries to prevent SQL-injection.
                     # Queries with more than 1000 bindvalues raise an error in cx_Oracle, robustness is built in by creating chunks
                     # More info about bindvalues can be found in the cx_Oracle docs.
                     chunks = [val[x: x + 990] for x in range(0, len(val), 990)]
                     df_list = []
                     for chunk in chunks:
                         values = chunk
-                        bindValues = [':' + str(i + 1) for i in range(len(values))] # Creates bindvalues list as [:1, :2, :3, ...]
+                        # Creates bindvalues list as [:1, :2, :3, ...]
+                        bindValues = [':' + str(i + 1)
+                                      for i in range(len(values))]
                         bindDate = [':dateMin', ':dateMax']
-                        
+
                         # Create a dictionary of all the bindvalues and values to relate them to eachother.
-                        bindAll =  bindValues + bindDate
+                        bindAll = bindValues + bindDate
                         values = values + [self.dateMin, self.dateMax]
                         bindDict = dict(zip(bindAll, values))
-                        
+
                         # Bindvalues are directly injected into the query.
                         query = 'SELECT mg.pbs_id, pb.buiscode||\'-\'||pb.volgnummer PEILBUIS, mg.wnc_code, mg.id, mg.datum_meting, mg.meetwaarde, mg.hoogte_meetmerk ' +\
                             'FROM PRW.prw_meetgegevens mg ' + \
                             'INNER JOIN PRW.prw_peilbuizen pb ON pb.id = mg.pbs_id ' + \
                             'WHERE mg.datum_meting BETWEEN TO_DATE(:dateMin, \'yyyy-mm-dd\') ' + \
                             'AND TO_DATE(:dateMax, \'yyyy-mm-dd\') ' + \
-                            'AND mg.pbs_id IN ({})'.format(','.join(bindValues))
+                            'AND mg.pbs_id IN ({})'.format(
+                                ','.join(bindValues))
                         fetched, description = self.fetch(query, bindDict)
-                        
+
                         if(len(fetched) > 0):
                             mtg_df = pd.DataFrame(fetched)
                             colnames = [desc[0] for desc in description]
                             mtg_df.columns = colnames
                             df_list.append(mtg_df)
-                    
+
                     # If df_list contains any dataframes
                     if df_list:
                         mtg_df_all = pd.concat(df_list, ignore_index=True)
                         return mtg_df_all
                     else:
-                        raise ValueError('Deze PBS_IDS hebben geen meetgegevens tussen '\
-                            + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val))
+                        raise ValueError('Deze PBS_IDS hebben geen meetgegevens tussen '
+                                            + self.dateMin + ' en ' + self.dateMax + '\n PBS_IDS: ' + str(val))
                 else:
                     raise TypeError('not all inputs are integers')
             else:
                 raise ValueError('No pbs_ids were supplied.')
         else:
             raise TypeError('Input is not a list or tuple')
-    
+
     @staticmethod
     def PbStats(df_in, decimals=2):
         """This function creates standard statistics for datasets
         Arguments:
         - filename
         - desired decimal places (default = 2)
-                
         """
 
         # Create empty dataframe with all desired statistics
-        df_stats = pd.DataFrame(columns=['PEILBUIS','Aantal metingen', 'Start datum', 'Eind datum', 'Maximaal gemeten', '95-percentiel', '70-percentiel', 'Gemiddelde',
-                                        '5-percentiel', 'Minimaal gemeten'], dtype='float')
-        
-        df_stats['PEILBUIS'] = df_in['PEILBUIS'].unique()  # Add all points to dataframe
+        df_stats = pd.DataFrame(columns=['PEILBUIS', 'Aantal metingen', 'Start datum', 'Eind datum', 'Maximaal gemeten', '95-percentiel', '70-percentiel', 'Gemiddelde',
+                                         '5-percentiel', 'Minimaal gemeten'], dtype='float')
+
+        # Add all points to dataframe
+        df_stats['PEILBUIS'] = df_in['PEILBUIS'].unique()
         # WARNING: at this point, the datatypes are 'float', which is NOT desired for the date fields
-            
+
         # Loop over individual locations and fill the fields
         for i, row in df_stats.iterrows():
             pb = row['PEILBUIS']      # Current location
-            df2 = df_in.loc[df_in['PEILBUIS']==pb]         # Select part of full dataframe to calculate statistics
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['Maximaal gemeten']]    = df2['MEETWAARDE'].max()
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['95-percentiel']]       = df2['MEETWAARDE'].quantile(0.95)
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['70-percentiel']]       = df2['MEETWAARDE'].quantile(0.70)
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['Gemiddelde']]          = df2['MEETWAARDE'].mean()
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['5-percentiel']]        = df2['MEETWAARDE'].quantile(0.05)
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['Minimaal gemeten']]    = df2['MEETWAARDE'].min()
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['Aantal metingen']]     = df2['MEETWAARDE'].count()
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['Start datum']]         = df2['DATUM_METING'].min()
-            df_stats.loc[df_stats['PEILBUIS']==pb, ['Eind datum']]          = df2['DATUM_METING'].max()
-            
+            # Select part of full dataframe to calculate statistics
+            df2 = df_in.loc[df_in['PEILBUIS'] == pb]
+            df_stats.loc[df_stats['PEILBUIS'] == pb, [
+                'Maximaal gemeten']] = df2['MEETWAARDE'].max()
+            df_stats.loc[df_stats['PEILBUIS'] == pb, [
+                '95-percentiel']] = df2['MEETWAARDE'].quantile(0.95)
+            df_stats.loc[df_stats['PEILBUIS'] == pb, [
+                '70-percentiel']] = df2['MEETWAARDE'].quantile(0.70)
+            df_stats.loc[df_stats['PEILBUIS'] == pb, [
+                'Gemiddelde']] = df2['MEETWAARDE'].mean()
+            df_stats.loc[df_stats['PEILBUIS'] == pb, [
+                '5-percentiel']] = df2['MEETWAARDE'].quantile(0.05)
+            df_stats.loc[df_stats['PEILBUIS'] == pb, [
+                'Minimaal gemeten']] = df2['MEETWAARDE'].min()
+            df_stats.loc[df_stats['PEILBUIS'] == pb, [
+                'Aantal metingen']] = df2['MEETWAARDE'].count()
+            df_stats.loc[df_stats['PEILBUIS'] == pb, [
+                'Start datum']] = df2['DATUM_METING'].min()
+            df_stats.loc[df_stats['PEILBUIS'] == pb, [
+                'Eind datum']] = df2['DATUM_METING'].max()
+
         # Conversion to desired formates
         df_stats['Aantal metingen'] = df_stats['Aantal metingen'].astype(int)
-        
+
         dateformat = '%Y-%m-%d %H:%M:%S'
-        df_stats['Start datum'] = pd.to_datetime(df_stats['Start datum'], format=dateformat)
-        df_stats['Eind datum'] = pd.to_datetime(df_stats['Eind datum'], format=dateformat)
+        df_stats['Start datum'] = pd.to_datetime(
+            df_stats['Start datum'], format=dateformat)
+        df_stats['Eind datum'] = pd.to_datetime(
+            df_stats['Eind datum'], format=dateformat)
 
         # Round all 'float' columns to the desired number of decimals
         df_stats = df_stats.round(decimals)
@@ -490,6 +519,7 @@ class PRW_Data_Opvrager:
 
         # Return transposed dataframe
         return df_stats
+
 
 class HeavyLifting(QgsTask):
     """This subclass of QgsTask will do all the work in the background on a seperate thread.
@@ -501,7 +531,7 @@ class HeavyLifting(QgsTask):
         self.iface = self.PRW.iface
         self.exception = None
         self.MESSAGE_CATEGORY = 'PRW_Data_Opvrager'
- 
+
     def run(self):
         """This function is where you do the 'heavy lifting' or implement
         the task which you want to run in a background thread. This function 
@@ -518,44 +548,47 @@ class HeavyLifting(QgsTask):
             return False
 
     def get_data(self):
-        """ This function runs the heavy code in the background."""
-        '''Fetch data and write it off to an excel file in the selected file location.'''
+        """ This function runs the heavy code in the background.
+        Fetch data and write it off to an excel file in the selected file location."""
         self.setProgress(0)
-        
+
         # Use the fetch functions to collect all the data
-        pbs_ids         =   self.PRW.get_pbs_ids(self.PRW.selected_layer)
-        pbs_ids         =   [int(x) for x in pbs_ids]
-        
+        pbs_ids = self.PRW.get_pbs_ids(self.PRW.selected_layer)
+        pbs_ids = [int(x) for x in pbs_ids]
+
         self.setProgress(5)
         if self.isCanceled():
             return False
 
-        df_pbs          =   self.PRW.get_peilbuizen(pbs_ids)
-        
+        df_pbs = self.PRW.get_peilbuizen(pbs_ids)
+
         self.setProgress(10)
         if self.isCanceled():
             return False
-        
-        df_meetgegevens =   self.PRW.get_meetgegevens(pbs_ids)
+
+        df_meetgegevens = self.PRW.get_meetgegevens(pbs_ids)
 
         self.setProgress(20)
         if self.isCanceled():
             return False
 
         # Calculate the statistics of the meetgegevens.
-        df_pbStats      =   self.PRW.PbStats(df_meetgegevens)
+        df_pbStats = self.PRW.PbStats(df_meetgegevens)
         # Present the statistics with some peilbuis gegevens
-        ond_filt        =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values
-        bov_filt        =   df_pbs['HOOGTE_MAAIVELD'].values - df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
+        ond_filt = df_pbs['HOOGTE_MAAIVELD'].values - \
+            df_pbs['LENGTE_BUIS'].values
+        bov_filt = df_pbs['HOOGTE_MAAIVELD'].values - \
+            df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
         df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],
-            columns=['Maaiveld', 'Bovenkant Peilbuis', 'Bovenkant Filter', 'Onderkant Filter'],
-            data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, bov_filt, ond_filt))
+                                      columns=['Maaiveld', 'Bovenkant Peilbuis',
+                                               'Bovenkant Filter', 'Onderkant Filter'],
+                                      data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, bov_filt, ond_filt))
         df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
 
         self.setProgress(40)
         if self.isCanceled():
             return False
-        
+
         # Check if the directory has to be created.
         if os.path.isdir(self.PRW.outputLocation) is False:
             os.mkdir(self.PRW.outputLocation)
@@ -568,7 +601,8 @@ class HeavyLifting(QgsTask):
             i = 1
             while os.path.exists(os.path.join(self.PRW.outputLocation, name + '{}.'.format(i) + ext)):
                 i += 1
-            output_file_dir = os.path.join(self.PRW.outputLocation, name + '{}.'.format(i) + ext)
+            output_file_dir = os.path.join(
+                self.PRW.outputLocation, name + '{}.'.format(i) + ext)
 
         # Writing the data to excel sheets
         with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w',
@@ -579,10 +613,11 @@ class HeavyLifting(QgsTask):
             self.setProgress(50)
             if self.isCanceled():
                 return False
-            
-            ## Adding the peilbuis tabel to an Excelsheet
+
+            # Adding the peilbuis tabel to an Excelsheet
             prw_pbs_sheetname = 'PRW_Peilbuizen'
-            df_pbs.to_excel(writer, sheet_name=prw_pbs_sheetname, index=False, freeze_panes=(1, 2))
+            df_pbs.to_excel(writer, sheet_name=prw_pbs_sheetname,
+                            index=False, freeze_panes=(1, 2))
             meetgeg_sheet = writer.sheets[prw_pbs_sheetname]
             # Sets the width of each column
             i = 0
@@ -592,8 +627,9 @@ class HeavyLifting(QgsTask):
 
             self.setProgress(60)
 
-            ## Adding the meetgegevens per peilbuis to the same Excelsheet
-            chart = workbook.add_chart({'type': 'scatter', 'subtype': 'straight'})
+            # Adding the meetgegevens per peilbuis to the same Excelsheet
+            chart = workbook.add_chart(
+                {'type': 'scatter', 'subtype': 'straight'})
             prw_meetgeg_sheetname = 'PRW_Peilbuis_Meetgegevens'
             min_date = min(df_meetgegevens['DATUM_METING'])
             max_date = max(df_meetgegevens['DATUM_METING'])
@@ -604,10 +640,12 @@ class HeavyLifting(QgsTask):
             for pbs in unique_peilbuizen:
                 # Parsing data per Peilbuis
                 df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
-                df_temp = df_temp[['DATUM_METING', 'MEETWAARDE']].dropna(subset=['MEETWAARDE'])
+                df_temp = df_temp[['DATUM_METING', 'MEETWAARDE']].dropna(subset=[
+                                                                         'MEETWAARDE'])
                 df_temp = df_temp.sort_values(by='DATUM_METING')
                 # Write to Excelsheet
-                df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col, startrow=1, index=False)
+                df_temp.to_excel(
+                    writer, sheet_name=prw_meetgeg_sheetname, startcol=col, startrow=1, index=False)
                 # Sets the width of the columns in Excel
                 meetgeg_sheet = writer.sheets[prw_meetgeg_sheetname]
                 meetgeg_sheet.freeze_panes(2, 0)
@@ -622,13 +660,13 @@ class HeavyLifting(QgsTask):
                     'categories':   ['PRW_Peilbuis_Meetgegevens', 2, col, N + 1, col],
                     'values':       ['PRW_Peilbuis_Meetgegevens', 2, col + 1, N + 1, col + 1]
                 })
-                
+
                 col = col + 3
                 prog = prog + prog_step
                 self.setProgress(round(prog))
                 if self.isCanceled():
                     return False
-        
+
             self.setProgress(80)
             if self.isCanceled():
                 return False
@@ -655,18 +693,19 @@ class HeavyLifting(QgsTask):
             chart.set_legend({'font': {'size': 12, 'bold': True}})
             chartsheet = workbook.add_chartsheet('Peilbuis Grafiek')
             chartsheet.set_chart(chart)
-            
+
             self.setProgress(90)
             if self.isCanceled():
                 return False
-            
+
             # Adding the statistieken tabel to an Excelsheet
             prw_stat_sheetname = 'Peilbuizen Statistiek'
-            df_pbStats_pbs.to_excel(writer, sheet_name=prw_stat_sheetname, freeze_panes=(1,1))
+            df_pbStats_pbs.to_excel(
+                writer, sheet_name=prw_stat_sheetname, freeze_panes=(1, 1))
             prw_stat_sheet = writer.sheets[prw_stat_sheetname]
             prw_stat_sheet.set_column(0, 0, 25)
             prw_stat_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
-        
+
         # Start the excel file
         os.startfile(output_file_dir)
 
@@ -677,16 +716,16 @@ class HeavyLifting(QgsTask):
         """ This function is called automatically when the task is completed and is 
         called from the main thread so it is safe to interact with the GUI etc here"""
         if result:
-            self.iface.messageBar().pushMessage('Task "{name}" completed ' \
-                'in {duration} seconds'.format(
-                    name=self.description(),
-                    duration=round(self.elapsedTime()/1000, 2)),
-                level=Qgis.Success)
+            self.iface.messageBar().pushMessage('Task "{name}" completed '
+                                                'in {duration} seconds'.format(
+                                                    name=self.description(),
+                                                    duration=round(self.elapsedTime()/1000, 2)),
+                                                level=Qgis.Success)
         else:
             if self.exception is None:
                 self.iface.messageBar().pushMessage(
-                    'Task "{name}" not succesful but without '\
-                    'exception (probably the task was manually '\
+                    'Task "{name}" not succesful but without '
+                    'exception (probably the task was manually '
                     'canceled by the user'.format(
                         name=self.description()),
                     self.MESSAGE_CATEGORY, Qgis.Warning)
@@ -695,12 +734,12 @@ class HeavyLifting(QgsTask):
                     'Task "{name}" threw an Exception: {exception}'.format(
                         name=self.description(),
                         exception=self.exception),
-                    self.MESSAGE_CATEGORY, Qgis.Critical)  
+                    self.MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
-    
+
     def cancel(self):
         self.iface.messageBar().pushMessage(
             'Task "{name}" canceled by the user.'.format(
                 name=self.description()),
-            self.MESSAGE_CATEGORY, Qgis.Info)  
+            self.MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()
