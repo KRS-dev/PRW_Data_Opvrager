@@ -595,7 +595,8 @@ class HeavyLifting(QgsTask):
             ## Adding the meetgegevens per peilbuis to the same Excelsheet
             chart = workbook.add_chart({'type': 'scatter', 'subtype': 'straight'})
             prw_meetgeg_sheetname = 'PRW_Peilbuis_Meetgegevens'
-            
+            min_date = min(df_meetgegevens['DATUM_METING'])
+            max_date = max(df_meetgegevens['DATUM_METING'])
             unique_peilbuizen = df_meetgegevens['PEILBUIS'].unique()
             prog_step = 20 / len(unique_peilbuizen)
             prog = 60
@@ -604,6 +605,7 @@ class HeavyLifting(QgsTask):
                 # Parsing data per Peilbuis
                 df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
                 df_temp = df_temp[['DATUM_METING', 'MEETWAARDE']].dropna(subset=['MEETWAARDE'])
+                df_temp = df_temp.sort_values(by='DATUM_METING')
                 # Write to Excelsheet
                 df_temp.to_excel(writer, sheet_name=prw_meetgeg_sheetname, startcol=col, startrow=1, index=False)
                 # Sets the width of the columns in Excel
@@ -639,6 +641,8 @@ class HeavyLifting(QgsTask):
                 'date_axis':        True,
                 'major_tick_mark':  'inside',
                 'minor_tick_mark':  'none',
+                'min':              min_date,
+                'max':              max_date
             })
             chart.set_y_axis({
                 'name':             'Grondwaterstand in mNAP',
