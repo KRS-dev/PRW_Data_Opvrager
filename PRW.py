@@ -277,12 +277,12 @@ class PRW_Data_Opvrager:
 
     def run_task(self):
         progDialog = QProgressDialog('Running Task in the background...', 'Cancel', 0, 100)
-        self.task = HeavyLifting('PRW Database Bevraging', self)
-        progDialog.canceled.connect(self.task.cancel)
+        task = HeavyLifting('PRW Database Bevraging', self)
+        progDialog.canceled.connect(task.cancel)
         progDialog.show()
-        self.task.begun.connect(lambda: progDialog.setLabelText('Begonnen met PRW peilbuisgegevens ophalen...'))
-        self.task.progressChanged.connect(lambda: progDialog.setValue(self.task.progress()))
-        QgsApplication.taskManager().addTask(self.task)      
+        task.begun.connect(lambda: progDialog.setLabelText('Begonnen met PRW peilbuisgegevens ophalen...'))
+        task.progressChanged.connect(lambda: progDialog.setValue(task.progress()))
+        QgsApplication.taskManager().addTask(task)
 
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
         '''Show a credentials dialog form to access the database. Checks credentials when clicked ok.'''
@@ -313,7 +313,7 @@ class PRW_Data_Opvrager:
         # Cora.connect throws an exception/error when the username/password is wrong
         with cora.connect(
             user=self.username,
-            password=self.password, 
+            password=self.password,
             dsn=self.dsn
         ):
             pass
@@ -593,13 +593,13 @@ class HeavyLifting(QgsTask):
             self.setProgress(60)
 
             ## Adding the meetgegevens per peilbuis to the same Excelsheet
-            chart = workbook.add_chart({'type': 'line'})
+            chart = workbook.add_chart({'type': 'scatter', 'subtype': 'straight'})
             prw_meetgeg_sheetname = 'PRW_Peilbuis_Meetgegevens'
             
             unique_peilbuizen = df_meetgegevens['PEILBUIS'].unique()
             prog_step = 20 / len(unique_peilbuizen)
             prog = 60
-            col = 0 
+            col = 0
             for pbs in unique_peilbuizen:
                 # Parsing data per Peilbuis
                 df_temp = df_meetgegevens[df_meetgegevens['PEILBUIS'] == pbs]
@@ -617,8 +617,8 @@ class HeavyLifting(QgsTask):
                 N = len(df_temp.index)
                 chart.add_series({
                     'name':         ['PRW_Peilbuis_Meetgegevens', 0, col + 1],
-                    'categories':   ['PRW_Peilbuis_Meetgegevens', 3, col, N + 3, col],
-                    'values':       ['PRW_Peilbuis_Meetgegevens', 3, col + 1, N + 3, col + 1]
+                    'categories':   ['PRW_Peilbuis_Meetgegevens', 2, col, N + 2, col],
+                    'values':       ['PRW_Peilbuis_Meetgegevens', 2, col + 1, N + 2, col + 1]
                 })
                 
                 col = col + 3
