@@ -619,8 +619,8 @@ class HeavyLifting(QgsTask):
                 N = len(df_temp.index)
                 chart.add_series({
                     'name':         ['PRW_Peilbuis_Meetgegevens', 0, col + 1],
-                    'categories':   ['PRW_Peilbuis_Meetgegevens', 2, col, N + 2, col],
-                    'values':       ['PRW_Peilbuis_Meetgegevens', 2, col + 1, N + 2, col + 1]
+                    'categories':   ['PRW_Peilbuis_Meetgegevens', 2, col, N + 1, col],
+                    'values':       ['PRW_Peilbuis_Meetgegevens', 2, col + 1, N + 1, col + 1]
                 })
                 
                 col = col + 3
