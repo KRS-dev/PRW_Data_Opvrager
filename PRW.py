@@ -575,14 +575,14 @@ class HeavyLifting(QgsTask):
         # Calculate the statistics of the meetgegevens.
         df_pbStats = self.PRW.PbStats(df_meetgegevens)
         # Present the statistics with some peilbuis gegevens
-        ond_filt = df_pbs['HOOGTE_MAAIVELD'].values - \
-            df_pbs['LENGTE_BUIS'].values
-        bov_filt = df_pbs['HOOGTE_MAAIVELD'].values - \
-            df_pbs['LENGTE_BUIS'].values + df_pbs['BOVENKANT_FILTER'].values
+        ond_filt = df_pbs['HOOGTE_MAAIVELD'].to_numpy() - \
+            df_pbs['LENGTE_BUIS'].to_numpy()
+        bov_filt = df_pbs['HOOGTE_MAAIVELD'].to_numpy() - \
+            df_pbs['LENGTE_BUIS'].to_numpy() + df_pbs['BOVENKANT_FILTER'].to_numpy()
         df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],
                                       columns=['Maaiveld', 'Bovenkant Peilbuis',
                                                'Bovenkant Filter', 'Onderkant Filter'],
-                                      data=zip(df_pbs['HOOGTE_MAAIVELD'].values, df_pbs['HOOGTE_BOV_BUIS'].values, bov_filt, ond_filt))
+                                      data=zip(df_pbs['HOOGTE_MAAIVELD'].to_numpy(), df_pbs['HOOGTE_BOV_BUIS'].to_numpy(), bov_filt, ond_filt))
         df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
 
         self.setProgress(40)
@@ -610,9 +610,12 @@ class HeavyLifting(QgsTask):
                             date_format='dd-mm-yyyy') as writer:
             workbook = writer.book
 
+            log_sheet_name = 'Log'
             log_list = ['PRW_Data_Opvrager', Qgis.QGIS_VERSION, time.asctime(time.localtime()), os.getlogin()]
-            log = pd.DataFrame(data=log_list, index=['Gemaakt met:', 'QGIS Versie:', 'Gemaakt op:', 'Gemaakt door:'])
-            log.to_excel(writer, sheet_name='Log')
+            log = pd.DataFrame(data=log_list, index=['Gegenereerd met:', 'QGIS Versie:', 'Gegenereerd op:', 'Gegenereerd door:'])
+            log.to_excel(writer, sheet_name=log_sheet_name, header=False)
+            log_sheet = writer.sheets[log_sheet_name]
+            log_sheet.set_column(0, 1, 25)
 
             self.setProgress(50)
             if self.isCanceled():
