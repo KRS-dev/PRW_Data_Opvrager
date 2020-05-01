@@ -38,6 +38,7 @@ import xlwt
 import pandas as pd
 import cx_Oracle as cora
 import time
+import numpy as np
 
 MESSAGE_CATEGORY = 'PRW_Data_Opvrager'
 
