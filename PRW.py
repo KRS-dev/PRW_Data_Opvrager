@@ -611,7 +611,7 @@ class HeavyLifting(QgsTask):
                             date_format='dd-mm-yyyy') as writer:
             workbook = writer.book
 
-            log_sheet_name = 'Log'
+            log_sheet_name = 'LOG'
             log_list = ['PRW_Data_Opvrager', Qgis.QGIS_VERSION, time.asctime(time.localtime()), os.getlogin()]
             log = pd.DataFrame(data=log_list, index=['Gegenereerd met:', 'QGIS Versie:', 'Gegenereerd op:', 'Gegenereerd door:'])
             log.to_excel(writer, sheet_name=log_sheet_name, header=False)
