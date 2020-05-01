@@ -575,14 +575,14 @@ class HeavyLifting(QgsTask):
         # Calculate the statistics of the meetgegevens.
         df_pbStats = self.PRW.PbStats(df_meetgegevens)
         # Present the statistics with some peilbuis gegevens
-        ond_filt = df_pbs['HOOGTE_MAAIVELD'].to_numpy() - \
-            df_pbs['LENGTE_BUIS'].to_numpy()
-        bov_filt = df_pbs['HOOGTE_MAAIVELD'].to_numpy() - \
-            df_pbs['LENGTE_BUIS'].to_numpy() + df_pbs['BOVENKANT_FILTER'].to_numpy()
+        ond_filt = df_pbs['HOOGTE_MAAIVELD'].to_numpy(dtype=np.float) - \
+            df_pbs['LENGTE_BUIS'].to_numpy(dtype=np.float)
+        bov_filt = df_pbs['HOOGTE_MAAIVELD'].to_numpy(dtype=np.float) - \
+            df_pbs['LENGTE_BUIS'].to_numpy(dtype=np.float) + df_pbs['BOVENKANT_FILTER'].to_numpy(dtype=np.float)
         df_pbStats_pbs = pd.DataFrame(index=df_pbs['PEILBUIS'],
                                       columns=['Maaiveld', 'Bovenkant Peilbuis',
                                                'Bovenkant Filter', 'Onderkant Filter'],
-                                      data=zip(df_pbs['HOOGTE_MAAIVELD'].to_numpy(), df_pbs['HOOGTE_BOV_BUIS'].to_numpy(), bov_filt, ond_filt))
+                                      data=zip(df_pbs['HOOGTE_MAAIVELD'].to_numpy(dtype=np.float), df_pbs['HOOGTE_BOV_BUIS'].to_numpy(dtype=np.float), bov_filt, ond_filt))
         df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
 
         self.setProgress(40)
