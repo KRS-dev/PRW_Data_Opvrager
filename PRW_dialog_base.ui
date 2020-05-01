@@ -42,7 +42,7 @@
     <item>
      <widget class="QLabel" name="label_4">
       <property name="text">
-       <string>Selecteer de Peilbuizen in een laag.</string>
+       <string>Selecteer de Peilbuizen</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
