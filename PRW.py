@@ -610,8 +610,8 @@ class HeavyLifting(QgsTask):
                             date_format='dd-mm-yyyy') as writer:
             workbook = writer.book
 
-            log_list = [Qgis.QGIS_VERSION, time.strftime('%d-%m-%Y', time.localtime(t)), os.getlogin()]    
-            log = pd.DataFrame(data=log_list, index=['QGIS Versie:', 'Gemaakt op:', 'Gemaakt door:'])
+            log_list = ['PRW_Data_Opvrager', Qgis.QGIS_VERSION, time.asctime(time.localtime()), os.getlogin()]
+            log = pd.DataFrame(data=log_list, index=['Gemaakt met:', 'QGIS Versie:', 'Gemaakt op:', 'Gemaakt door:'])
             log.to_excel(writer, sheet_name='Log')
 
             self.setProgress(50)
