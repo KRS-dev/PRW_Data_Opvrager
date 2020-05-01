@@ -221,7 +221,7 @@ class PRW_Data_Opvrager:
         # See if OK was pressed
         if result:
             # Extracting values from the dialog form
-            self.selected_layer = self.dlg.MapLayerComboBox.currentLayer()
+            self.selected_layer = self.iface.activeLayer()
             self.dateMax = self.dlg.DateMax.date().toString('yyyy-MM-dd')
             self.dateMin = self.dlg.DateMin.date().toString('yyyy-MM-dd')
             self.fileName = self.dlg.FileName.text()

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>283</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,15 +42,12 @@
     <item>
      <widget class="QLabel" name="label_4">
       <property name="text">
-       <string>Selecteer de laag met Peilbuis ID's:</string>
+       <string>Selecteer de Peilbuizen in een laag.</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
       </property>
      </widget>
-    </item>
-    <item>
-     <widget class="QgsMapLayerComboBox" name="MapLayerComboBox"/>
     </item>
     <item>
      <widget class="QLabel" name="label_6">
@@ -196,11 +193,6 @@
    <class>QgsFileWidget</class>
    <extends>QWidget</extends>
    <header>qgsfilewidget.h</header>
-  </customwidget>
-  <customwidget>
-   <class>QgsMapLayerComboBox</class>
-   <extends>QComboBox</extends>
-   <header>qgsmaplayercombobox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
