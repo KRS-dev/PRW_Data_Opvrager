@@ -320,7 +320,7 @@ class PRW_Data_Opvrager:
             return 'exit', errorMessage
 
     def check_connection(self):
-        '''Checks the Oracle database connection. 
+        '''Checks the Oracle database connection.
         cx_Oracle.databaseError's are thrown out if the connection does not work.'''
         # Cora.connect throws an exception/error when the username/password is wrong
         with cora.connect(
@@ -381,7 +381,7 @@ class PRW_Data_Opvrager:
                                       for i in range(len(values))]
 
                         # Bindvalues are directly injected into the query.
-                        query = 'SELECT id, buiscode||\'-\'||p.volgnummer PEILBUIS, buiscode_project, inw_diameter, hoogte_meetmerk, nul_meting, hoogte_maaiveld, bovenkant_filter, lengte_buis, hoogte_bov_buis, toel_afwijking, btp_code, meetmerk, plaatsbepaling, datum_start, datum_eind, datum_vervallen, ind_plaatsing, x_coordinaat, y_coordinaat, last_updated_by, last_update_date, created_by, creation_date, mat_code, geometrie '\
+                        query = 'SELECT id, buiscode||\'-\'||p.volgnummer PEILBUIS, buiscode_project, inw_diameter, hoogte_meetmerk, nul_meting, hoogte_maaiveld, bovenkant_filter, lengte_buis, hoogte_bov_buis, btp_code, meetmerk, plaatsbepaling, datum_start, datum_eind, datum_vervallen, x_coordinaat, y_coordinaat, mat_code '\
                             + 'FROM prw.prw_peilbuizen p '\
                             + 'WHERE id IN ({})'.format(','.join(bindValues))
                         fetched, description = self.fetch(query, values)
@@ -609,6 +609,10 @@ class HeavyLifting(QgsTask):
                             datetime_format='dd-mm-yyyy',
                             date_format='dd-mm-yyyy') as writer:
             workbook = writer.book
+
+            log_list = [Qgis.QGIS_VERSION, time.strftime('%d-%m-%Y', time.localtime(t)), os.getlogin()]    
+            log = pd.DataFrame(data=log_list, index=['QGIS Versie:', 'Gemaakt op:', 'Gemaakt door:'])
+            log.to_excel(writer, sheet_name='Log')
 
             self.setProgress(50)
             if self.isCanceled():
