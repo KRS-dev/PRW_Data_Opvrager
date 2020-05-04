@@ -231,7 +231,7 @@ class PRW_Data_Opvrager:
             source = self.selected_layer.source()
             uri = QgsDataSourceUri(source)
             try:
-                assert not uri.database(), '"{layer}" heeft geen connectie met een database.'.format(
+                assert len(uri.database()) != 0, '"{layer}" heeft geen connectie met een database.'.format(
                     layer=self.selected_layer.name())
                 assert self.selected_layer.selectedFeatureCount(
                 ) != 0, 'Geen Objecten zijn geselecteerd in laag: "{layer}".'.format(layer=self.selected_layer.name())
