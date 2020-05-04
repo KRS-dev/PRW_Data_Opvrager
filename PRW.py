@@ -234,7 +234,8 @@ class PRW_Data_Opvrager:
                 assert uri.database(), '"{layer}" heeft geen connectie met een database.'.format(
                     layer=self.selected_layer.name())
                 assert self.selected_layer.selectedFeatureCount() != 0, 'Geen Objecten zijn geselecteerd in laag: "{layer}".'.format(layer=self.selected_layer.name())
-                assert self.fileName, 'Er is geen Excel Bestand Naam opgegeven.'
+                assert self.fileName, 'Er is geen Excel uitvoernaam opgegeven.'
+                assert self.outputLocation, 'Er is geen uitvoermap opgegeven.'
             except Exception as e:
                 self.iface.messageBar().pushMessage("Error", str(e), level=2, duration=5)
                 return
@@ -610,7 +611,7 @@ class HeavyLifting(QgsTask):
             workbook = writer.book
 
             log_sheet_name = 'LOG'
-            log_list = ['PRW_Data_Opvrager', Qgis.QGIS_VERSION, time.asctime(time.localtime()), os.getlogin()]
+            log_list = ['PRW_Data_Opvrager', Qgis.QGIS_VERSION, time.strftime("%c", time.localtime()), os.getlogin()]
             log = pd.DataFrame(data=log_list, index=['Gegenereerd met:', 'QGIS Versie:', 'Gegenereerd op:', 'Gegenereerd door:'])
             log.to_excel(writer, sheet_name=log_sheet_name, header=False)
             log_sheet = writer.sheets[log_sheet_name]
