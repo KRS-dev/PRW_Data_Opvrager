@@ -222,7 +222,7 @@ class PRW_Data_Opvrager:
         # See if OK was pressed
         if result:
             # Extracting values from the dialog form
-            self.selected_layer = self.iface.activeLayer()
+            self.selected_layer = self.dlg.cmb_layer.currentLayer()
             self.dateMax = self.dlg.DateMax.date().toString('yyyy-MM-dd')
             self.dateMin = self.dlg.DateMin.date().toString('yyyy-MM-dd')
             self.fileName = self.dlg.FileName.text()
@@ -231,12 +231,11 @@ class PRW_Data_Opvrager:
             source = self.selected_layer.source()
             uri = QgsDataSourceUri(source)
             try:
-                assert len(uri.database()) != 0, '"{layer}" heeft geen connectie met een database.'.format(
+                assert not uri.database(), '"{layer}" heeft geen connectie met een database.'.format(
                     layer=self.selected_layer.name())
                 assert self.selected_layer.selectedFeatureCount(
                 ) != 0, 'Geen Objecten zijn geselecteerd in laag: "{layer}".'.format(layer=self.selected_layer.name())
-                assert len(
-                    self.fileName) != 0, 'Er is geen Excel Bestand Naam opgegeven.'
+                assert not self.fileName, 'Er is geen Excel Bestand Naam opgegeven.'
             except Exception as e:
                 self.iface.messageBar().pushMessage("Error", str(e), level=2, duration=5)
                 return
