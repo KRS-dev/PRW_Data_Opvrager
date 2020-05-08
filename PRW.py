@@ -722,8 +722,8 @@ class HeavyLifting(QgsTask):
             return False
 
         if self.PRW.shpExportBool:
-            df_pbs = df_pbs.sort('PEILBUIS')
-            df_pbStats = df_pbs_shp.sort('PEILBUIS')
+            df_pbs = df_pbs.sort_values(by='PEILBUIS')
+            df_pbStats = df_pbStats.sort_values(by='PEILBUIS')
 
             df_pbs_shp = pd.concat([df_pbs, df_pbStats.loc[:, 'Maximaal gemeten':'Minimaal gemeten']], axis=0)
             for i in df_pbs_shp:
