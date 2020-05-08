@@ -722,7 +722,10 @@ class HeavyLifting(QgsTask):
             return False
 
         if self.PRW.shpExportBool:
-            df_pbs_shp = pd.concat([df_pbs, df_pbStats], axis=1)
+            df_pbs = df_pbs.sort('PEILBUIS')
+            df_pbStats = df_pbs_shp.sort('PEILBUIS')
+
+            df_pbs_shp = pd.concat([df_pbs, df_pbStats.loc[:, 'Maximaal gemeten':'Minimaal gemeten']], axis=0)
             for i in df_pbs_shp:
                 if df_pbs_shp[i].dtypes == 'datetime64[ns]':
                     df_pbs_shp[i] = df_pbs_shp.astype(str)
