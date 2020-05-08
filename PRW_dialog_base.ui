@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>283</height>
+    <height>291</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>240</y>
+     <y>250</y>
      <width>341</width>
      <height>32</height>
     </rect>
@@ -35,7 +35,7 @@
      <x>20</x>
      <y>10</y>
      <width>351</width>
-     <height>225</height>
+     <height>241</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -118,6 +118,19 @@
        </widget>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="exportShapefile">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Exporteer ook als Shapefile</string>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="label_5">

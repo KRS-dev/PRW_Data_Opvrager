@@ -227,6 +227,7 @@ class PRW_Data_Opvrager:
             self.selected_layer = self.dlg.cmb_layer.currentLayer()
             self.dateMax = self.dlg.DateMax.date().toString('yyyy-MM-dd')
             self.dateMin = self.dlg.DateMin.date().toString('yyyy-MM-dd')
+            self.shpExportBool = self.dlg.exportShapefile.isChecked()
             self.fileName = self.dlg.FileName.text()
             self.outputLocation = self.dlg.OutputLocation.filePath()
 
@@ -717,15 +718,15 @@ class HeavyLifting(QgsTask):
             prw_stat_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
 
         self.setProgress(95)
-            if self.isCanceled():
-                return False
+        if self.isCanceled():
+            return False
 
         if self.PRW.shpExportBool:
             df_pbs_shp = pd.concat([df_pbs, df_pbStats], axis=1)
             for i in df_pbs_shp:
                 if df_pbs_shp[i].dtypes == 'datetime64[ns]':
                     df_pbs_shp[i] = df_pbs_shp.astype(str)
-            df_pbs_shp['geometry'] = geometry = [Point(xy) for xy in zip(df_pbs_shp.X_COORDINAAT, df_pbs_shp.Y_COORDINAAT)]
+            df_pbs_shp['geometry'] = [Point(xy) for xy in zip(df_pbs_shp.X_COORDINAAT, df_pbs_shp.Y_COORDINAAT)]
             gdf = gpd.GeoDataFrame(df_pbs_shp)
             gdf.to_file(output_file_dir.split('.')[0])
 
