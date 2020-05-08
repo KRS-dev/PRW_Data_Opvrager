@@ -36,6 +36,8 @@ from qgis.core import (
 import os
 import xlwt
 import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Point
 import cx_Oracle as cora
 import time
 import numpy as np
@@ -585,6 +587,7 @@ class HeavyLifting(QgsTask):
                                       data=zip(df_pbs['HOOGTE_MAAIVELD'].to_numpy(dtype=np.float), df_pbs['HOOGTE_BOV_BUIS'].to_numpy(dtype=np.float), bov_filt, ond_filt))
         df_pbStats_pbs = pd.concat([df_pbStats_pbs, df_pbStats], axis=1).T
 
+
         self.setProgress(40)
         if self.isCanceled():
             return False
@@ -712,6 +715,19 @@ class HeavyLifting(QgsTask):
             prw_stat_sheet = writer.sheets[prw_stat_sheetname]
             prw_stat_sheet.set_column(0, 0, 25)
             prw_stat_sheet.set_column(1, len(df_pbStats_pbs.columns), 13)
+
+        self.setProgress(95)
+            if self.isCanceled():
+                return False
+
+        if self.PRW.shpExportBool:
+            df_pbs_shp = pd.concat([df_pbs, df_pbStats], axis=1)
+            for i in df_pbs_shp:
+                if df_pbs_shp[i].dtypes == 'datetime64[ns]':
+                    df_pbs_shp[i] = df_pbs_shp.astype(str)
+            df_pbs_shp['geometry'] = geometry = [Point(xy) for xy in zip(df_pbs_shp.X_COORDINAAT, df_pbs_shp.Y_COORDINAAT)]
+            gdf = gpd.GeoDataFrame(df_pbs_shp)
+            gdf.to_file(output_file_dir.split('.')[0])
 
         # Start the excel file
         os.startfile(output_file_dir)
