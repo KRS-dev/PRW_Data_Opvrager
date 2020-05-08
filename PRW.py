@@ -599,17 +599,17 @@ class HeavyLifting(QgsTask):
 
         fileNameExt = self.PRW.fileName + '.xlsx'
         # Check if the selected filename exists in the dir
-        output_file_dir = os.path.join(self.PRW.outputLocation, fileNameExt)
-        if os.path.exists(output_file_dir):
+        output_file_dir_ext = os.path.join(self.PRW.outputLocation, fileNameExt)
+        if os.path.exists(output_file_dir_ext):
             name, ext = fileNameExt.split('.')
             i = 1
             while os.path.exists(os.path.join(self.PRW.outputLocation, name + '{}.'.format(i) + ext)):
                 i += 1
-            output_file_dir = os.path.join(
-                self.PRW.outputLocation, name + '{}.'.format(i) + ext)
+            output_file_dir_ext = os.path.join(self.PRW.outputLocation, name + '{}.'.format(i) + ext)
+            output_file_dir = os.path.join(self.PRW.outputLocation, name + '{}.'.format(i))
 
         # Writing the data to excel sheets
-        with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w',
+        with pd.ExcelWriter(output_file_dir_ext, engine='xlsxwriter', mode='w',
                             datetime_format='dd-mm-yyyy',
                             date_format='dd-mm-yyyy') as writer:
             workbook = writer.book
@@ -728,10 +728,11 @@ class HeavyLifting(QgsTask):
                     df_pbs_shp[i] = df_pbs_shp.astype(str)
             df_pbs_shp['geometry'] = [Point(xy) for xy in zip(df_pbs_shp.X_COORDINAAT, df_pbs_shp.Y_COORDINAAT)]
             gdf = gpd.GeoDataFrame(df_pbs_shp)
-            gdf.to_file(output_file_dir.split('.')[0])
+            gdf.crs = {'init' :'epsg:28992'}
+            gdf.to_file(output_file_dir)
 
         # Start the excel file
-        os.startfile(output_file_dir)
+        os.startfile(output_file_dir_ext)
 
         self.setProgress(100)
         return True
