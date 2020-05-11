@@ -726,6 +726,7 @@ class HeavyLifting(QgsTask):
             df_pbStats = df_pbStats.sort_values(by='PEILBUIS')
 
             df_pbs_shp = pd.concat([df_pbs, df_pbStats.loc[:, 'Maximaal gemeten':'Minimaal gemeten']], axis=1, ignore_index=True)
+            print(df_pbs_shp)
             for i in df_pbs_shp:
                 if df_pbs_shp[i].dtypes == 'datetime64[ns]':
                     df_pbs_shp[i] = df_pbs_shp.astype(str)
