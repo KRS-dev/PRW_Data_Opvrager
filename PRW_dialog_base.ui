@@ -35,7 +35,7 @@
      <x>20</x>
      <y>10</y>
      <width>351</width>
-     <height>241</height>
+     <height>231</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -122,13 +122,13 @@
     <item>
      <widget class="QCheckBox" name="exportShapefile">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Exporteer ook als Shapefile</string>
+       <string>Exporteer Peilbuizenlaag ook als Shapefile</string>
       </property>
      </widget>
     </item>
