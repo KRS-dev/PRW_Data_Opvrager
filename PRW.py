@@ -733,7 +733,7 @@ class HeavyLifting(QgsTask):
                     df_pbs_shp[i] = df_pbs_shp.astype(str)
             df_pbs_shp['geometry'] = [Point(xy) for xy in zip(df_pbs_shp.X_COORDINAAT, df_pbs_shp.Y_COORDINAAT)]
             gdf = gpd.GeoDataFrame(df_pbs_shp)
-            gdf.crs = {'init' :'epsg:28992'}
+            gdf.crs = {'init': 'epsg:28992'}
             gdf.to_file(output_file_dir)
 
         # Start the excel file
