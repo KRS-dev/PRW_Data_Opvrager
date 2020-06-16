@@ -46,15 +46,100 @@ MESSAGE_CATEGORY = 'PRW_Data_Opvrager'
 
 
 class PRW_Data_Opvrager:
-    """QGIS Plugin Implementation."""
+    """QGIS Plugin Core logic.
+    
+    This class performs the logic behind the plugin. Most Parameters
+    are set in the run() method when 'ok' is clicked.
+
+    Parameters
+    ----------
+    iface : QgsInterface object
+        The current session Qgis interface instance that will be
+        passed to this class which provides the hook by which you
+        can manipulate the QGIS application at run time.
+    plugin_dir : str
+        Plugin directory location.
+    translator : QTranslator object
+        Translation object from Qt5.
+    actions : list of QAction
+        QAction list that Qgis performs when starting up the Plugin.
+    menu : QString
+        Translated menu name.
+    first_start : bool
+        Check if plugin was started the first time in current QGIS 
+        session.
+    dlg : ProevenVerzamelingDialog object
+        Reference to the ProevenVerzamelingDialog UI.
+    username : str
+        Database username used by the selected_layer
+    password : str
+        Database password used by the selected_layer
+    dsn : str
+        Database DSN used by the selected_layer
+    selected_layer : QgisVectorLayer
+        QGIS layer which contains the connection to the PRW database
+    database : str
+        Database name used by the selected_layer
+    dateMax : str
+        Maximum date in the format 'yyyy-MM-dd'
+    dateMin : str
+        Maximum date in the format 'yyyy-MM-dd'
+    fileName : str
+        Output Excel filename
+    outputLocation : str
+        Output directory
+    shpExportBool : bool
+        Shapefile export bool (defaults to False)
+
+    Methods
+    ----------
+    __init__(iface)
+        initializer.
+    tr(message)
+        Get the translation for a string using Qt translation API.
+    add_action(
+        icon_path,
+        text,
+        callback,
+        enabled_flag=True,
+        add_to_menu=True,
+        add_to_toolbar=True,
+        status_tip=None,
+        whats_this=None,
+        parent=None)
+        Add a toolbar icon to the toolbar
+    initGui()
+        Create the menu entries and toolbar icons inside the QGIS GUI
+    unload()
+        Removes the plugin menu item and icon from QGIS GUI
+    run()
+        Runs the logic behind the dialogs
+    run_task()
+        Sets up the QgsTask and the progression dialog.
+    get_credentials(host, port, database, username=None, password=None, message=None)
+        Runs a QgsCredentials instance to input database credentials
+    check_connection()
+        Checks the Oracle database connection
+    fetch(query, data)
+        Fetch queries with the data in bindValues
+    get_pbs_ids(qgisLayer)
+        Extract the id's from the selected peilbuizen in the layer
+    get_peilbuizen(pbs_ids)
+        Setting up the queries to fetch all data from the PRW_Peilbuizen table 
+        and processing the data as a pandas.DataFrame
+    PbStats(df_in, decimals)
+        This method creates standard statistics for peilbuis datasets
+    """
 
     def __init__(self, iface):
-        """Constructor.
+        """Initializer.
 
-        :param iface: An interface instance that will be passed to this class
+        Parameters
+        ----------
+        iface : QgsInterface object
+            An interface instance that will be passed to this class
             which provides the hook by which you can manipulate the QGIS
             application at run time.
-        :type iface: QgsInterface
         """
         # Save reference to the QGIS interface
         self.iface = iface
@@ -90,18 +175,22 @@ class PRW_Data_Opvrager:
         self.dateMin = None
         self.fileName = None
         self.outputLocation = None
+        self.shpExportBool = False
 
-    # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 
         We implement this ourselves since we do not inherit QObject.
 
-        :param message: String for translation.
-        :type message: str, QString
-
-        :returns: Translated version of message.
-        :rtype: QString
+        Parameters
+        ----------
+        message : str, QString
+            String for translation.
+        
+        Returns
+        ----------
+        QString
+            Translated version of message.
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('PRW_Data_Opvrager', message)
@@ -119,41 +208,38 @@ class PRW_Data_Opvrager:
             parent=None):
         """Add a toolbar icon to the toolbar.
 
-        :param icon_path: Path to the icon for this action. Can be a resource
-            path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
-        :type icon_path: str
-
-        :param text: Text that should be shown in menu items for this action.
-        :type text: str
-
-        :param callback: Function to be called when the action is triggered.
-        :type callback: function
-
-        :param enabled_flag: A flag indicating if the action should be enabled
-            by default. Defaults to True.
-        :type enabled_flag: bool
-
-        :param add_to_menu: Flag indicating whether the action should also
-            be added to the menu. Defaults to True.
-        :type add_to_menu: bool
-
-        :param add_to_toolbar: Flag indicating whether the action should also
-            be added to the toolbar. Defaults to True.
-        :type add_to_toolbar: bool
-
-        :param status_tip: Optional text to show in a popup when mouse pointer
-            hovers over the action.
-        :type status_tip: str
-
-        :param parent: Parent widget for the new action. Defaults None.
-        :type parent: QWidget
-
-        :param whats_this: Optional text to show in the status bar when the
-            mouse pointer hovers over the action.
-
-        :returns: The action that was created. Note that the action is also
-            added to self.actions list.
-        :rtype: QAction
+        Parameters
+        ----------
+        icon_path : str
+            Path to the icon for this action. Can be a resource path
+            (e.g. ':/plugins/foo/bar.png') or a normal file system path
+        text : str
+            Text that should be shown in menu items for this action
+        callback : function
+            Function to be called when the action is triggered
+        enabled_flag : bool, optional
+            A flag indicating if the action should be enabled by default 
+            (defaults to True)
+        add_to_menu : bool, optional
+            Flag indicating whether the action should also be added to the menu 
+            (defaults to True)
+        add_to_toolbar : bool, optional
+            Flag indicating whether the action should also be added to the toolbar
+            (defaults to True)
+        status_tip : str or None, optional
+            Text to show in a popup when mouse pointer hovers over the action 
+            (defaults to None)
+        whats_this : str or None, optional
+            Text to show in the status bar when the mouse pointer hovers over
+            the action (defaults to None)
+        parent : QWidget or None, optional
+            Parent widget for the new action (defaults to None)
+        
+        Returns
+        ----------
+        QAction
+            The action that was created. Note that the action is also added to
+            self.actions list.
         """
 
         icon = QIcon(icon_path)
@@ -202,12 +288,13 @@ class PRW_Data_Opvrager:
             self.iface.removeToolBarIcon(action)
 
     def run(self):
-        """Run method that performs all the real work"""
+        """Runs the logic behind the dialogs"""
 
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start:
             self.first_start = False
+            # Start a dialog window
             self.dlg = PRW_Data_OpvragerDialog()
             self.dlg.OutputLocation.setStorageMode(1)
             self.dlg.OutputLocation.setFilePath(
@@ -234,6 +321,7 @@ class PRW_Data_Opvrager:
             source = self.selected_layer.source()
             uri = QgsDataSourceUri(source)
             try:
+                # Check if a database is connected to the layer source
                 assert uri.database(), '"{layer}" heeft geen connectie met een database.'.format(
                     layer=self.selected_layer.name())
                 assert self.selected_layer.selectedFeatureCount() != 0, 'Geen Objecten zijn geselecteerd in laag: "{layer}".'.format(layer=self.selected_layer.name())
@@ -241,6 +329,7 @@ class PRW_Data_Opvrager:
                 assert self.outputLocation, 'Er is geen uitvoermap opgegeven.'
             except Exception as e:
                 self.iface.messageBar().pushMessage("Error", str(e), level=2, duration=5)
+                raise e
                 return
 
             savedUsername = uri.hasParam('username')
@@ -256,7 +345,7 @@ class PRW_Data_Opvrager:
 
             errorMessage = None
             # If we have a username and password try to connect, otherwise ask for credentials
-            # if the connection fails store the error and show dialog screen for credentials input
+            # If the connection fails store the error and show dialog screen for credentials input
             if savedUsername is True and savedPassword is True:
                 try:
                     self.check_connection()
@@ -265,6 +354,7 @@ class PRW_Data_Opvrager:
                     errorObj, = e.args
                     errorMessage = errorObj.message
                     success = 'false'
+                    # Credentials loop
                     while success == 'false':
                         success, errorMessage = \
                             self.get_credentials(
@@ -277,6 +367,7 @@ class PRW_Data_Opvrager:
                 success, errorMessage = \
                     self.get_credentials(
                         host, port, self.database, username=self.username, password=self.password)
+                # Credentials loop
                 while success == 'false':
                     success, errorMessage = \
                         self.get_credentials(
@@ -287,19 +378,59 @@ class PRW_Data_Opvrager:
                     self.run_task()
 
     def run_task(self):
+        """
+        Sets up the QgsTask and the progression dialog.
+
+        The heavy work of the plugin will be outsourced to a QgsTask
+        to not stagger the QGIS Application. Technically the main 
+        application runs on the main thread, QgsTask lets you run
+        heavy stuff on a seperate thread to not clutter the main
+        thread.        
+        """
+        # Qt5 progressionDialog on the main
         progDialog = QProgressDialog(
             'Running Task in the background...', 'Cancel', 0, 100)
+        # Create task
+        # With 'self' this class will be sent to the QgsTask so that
+        # its methods and attributes can be accessed.
         task = HeavyLifting('PRW Database Bevraging', self)
+        # Connect events from the ProgressDialog to the task
         progDialog.canceled.connect(task.cancel)
-        progDialog.show()
         task.begun.connect(lambda: progDialog.setLabelText(
             'Begonnen met PRW peilbuisgegevens ophalen...'))
         task.progressChanged.connect(
             lambda: progDialog.setValue(task.progress()))
+        # Show ProgressDialog
+        progDialog.show()
+        # Add task to taskManager (start task)
         QgsApplication.taskManager().addTask(task)
-
+        
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
-        '''Show a credentials dialog form to access the database. Checks credentials when clicked ok.'''
+        """
+        Runs a QgsCredentials instance to input database credentials
+        
+        Parameters
+        ----------
+        host : str
+            Database host string
+        port : int or str
+            Database port number
+        database : str
+            Database name
+        username : str
+            Database username
+        password : str
+            Database password
+        message : str
+            Message to show on the credentials dialog window
+        
+        Returns
+        ----------
+        str
+            'true', 'false' or 'exit' depending on the outcome
+        errorMessage : str or None
+            Database error message when the connection failed
+        """
         uri = QgsDataSourceUri()
         uri.setConnection(host, port, database, username, password)
         connInfo = uri.connectionInfo()
@@ -323,18 +454,35 @@ class PRW_Data_Opvrager:
             return 'exit', errorMessage
 
     def check_connection(self):
-        '''Checks the Oracle database connection.
-        cx_Oracle.databaseError's are thrown out if the connection does not work.'''
+        """Checks the Oracle database connection
+
+        cx_Oracle.databaseError's are thrown out if the connection does not work.
+        """
         # Cora.connect throws an exception/error when the username/password is wrong
         with cora.connect(
             user=self.username,
             password=self.password,
             dsn=self.dsn
-        ):
+            ):
             pass
 
     def fetch(self, query, data):
-        '''Fetch queries with the data in bindValues.'''
+        """Fetch queries with the data in bindValues
+        
+        Parameters
+        ----------
+        query : str
+            String of a SQL Statement used in querying
+        data : list or dict
+            Bindvalues corresponding to the bindvariable in the 'query' 
+            statement.
+            dict({bindvariable: bindvalue, ...})
+            list([bindvalue01, bindvalue02, ...])
+            With lists bindvariables will be filled in the same order as 
+            the list.
+            More on bindValues:
+            https://cx-oracle.readthedocs.io/en/latest/user_guide/bind.html
+        """
         with cora.connect(
             user=self.username,
             password=self.password,
@@ -349,7 +497,19 @@ class PRW_Data_Opvrager:
 
     @staticmethod
     def get_pbs_ids(qgisLayer):
-        '''Extract from the selected peilbuizen in the layer the id's.'''
+        """
+        Extract the id's from the selected peilbuizen in the layer.
+        
+        Parameters
+        ----------
+        qgisLayer : QgsVectorLayer
+            Selected layer which contains ID's of every peilbuis
+        
+        Returns
+        ----------
+        pbs_ids : list of int
+            Peilbuizen ids selected in the layer
+        """
         pbs_ids = []
         features = qgisLayer.selectedFeatures()
 
@@ -366,7 +526,20 @@ class PRW_Data_Opvrager:
                 'Geen features zijn geselecteerd in de aangewezen laag.')
 
     def get_peilbuizen(self, pbs_ids):
-        '''Setting up the queries to fetch all data from the PRW_Peilbuizen table and processing the data as a pandas.DataFrame.'''
+        """
+        Setting up the queries to fetch all data from the PRW_Peilbuizen table 
+        and processing the data as a pandas.DataFrame.
+        
+        Parameters
+        ----------
+        pbs_ids : list of int
+            Peilbuizen ids
+        
+        Returns
+        ----------
+        Returns : pandas.DataFrame
+            Queried data from the peilbuizen table
+        """
         if isinstance(pbs_ids, (list, tuple, pd.Series)):
             if len(pbs_ids) > 0:
                 if(all(isinstance(x, int) for x in pbs_ids)):
@@ -468,10 +641,16 @@ class PRW_Data_Opvrager:
 
     @staticmethod
     def PbStats(df_in, decimals=2):
-        """This function creates standard statistics for datasets
-        Arguments:
-        - filename
-        - desired decimal places (default = 2)
+        """
+        This method creates standard statistics for peilbuis datasets
+        
+        Parameters
+        ----------
+        df_in : pandas.DataFrame
+            Meetgegevens dataset
+
+        df_stats : pandas.DataFrame
+            Statistics dataset
         """
 
         # Create empty dataframe with all desired statistics
@@ -525,10 +704,52 @@ class PRW_Data_Opvrager:
 
 
 class HeavyLifting(QgsTask):
-    """This subclass of QgsTask will do all the work in the background on a seperate thread.
-    In the meantime Qgis will still be able to run normally."""
+    """
+    This subclass of QgsTask will do all the work in the background on a seperate thread.
+    In the meantime Qgis will still be able to run normally.
+    
+    Attributes
+    ----------
+    PRW : PRW_Data_Opvrager object
+        Reference to the plugin class for all the attributes and methods
+    iface : QgsInterface object
+        The current session Qgis interface instance that will be
+        passed to this class which provides the hook by which you
+        can manipulate the QGIS application at run time.
+    exception :  Exception
+        Stores any errors thrown during the execution of this QgsTask
+    MESSAGE_CATEGORY : str
+        the debugging log window for writing logs
+    
+    Methods
+    ----------
+    __init__(description, PRW_Data_Opvrager)
+        Initializer
+    run()
+        This function is where you do the 'heavy lifting' or implement
+        the task which you want to run in a background thread. 
+    get_data()
+        Fetch data and write it off to an excel file in the selected 
+        directory
+    finished()
+        This function is called automatically when the task is completed
+    cancel()
+        Method called when QgsTask is canceled 
+    """
 
     def __init__(self, description, PRW_Data_Opvrager):
+        """
+        Initializer
+
+        Parameters
+        ----------
+        description : str
+            Description of the QgsTask
+        PRW_Data_Opvrager : PRW_Data_Opvrager
+            Reference to the plugin class for all the attributes and methods
+        """
+        # Initialize the base QgsTask class with the description and tell
+        # the QgsTask it can be canceled
         QgsTask.__init__(self, description, QgsTask.CanCancel)
         self.PRW = PRW_Data_Opvrager
         self.iface = self.PRW.iface
@@ -537,9 +758,15 @@ class HeavyLifting(QgsTask):
 
     def run(self):
         """This function is where you do the 'heavy lifting' or implement
-        the task which you want to run in a background thread. This function 
-        must return True or False and should only interact with the main thread
-        via signals"""
+        the task which you want to run in a background thread. 
+        
+        This function must return True or False and should only interact 
+        with the main thread via signals.
+        
+        Returns
+        ---------
+        bool
+        """
         try:
             result = self.get_data()
             if result:
@@ -551,8 +778,13 @@ class HeavyLifting(QgsTask):
             return False
 
     def get_data(self):
-        """ This function runs the heavy code in the background.
-        Fetch data and write it off to an excel file in the selected file location."""
+        """ 
+        Fetch data and write it off to an excel file in the selected file location.
+        
+        Returns
+        ---------
+        bool
+        """
         self.setProgress(0)
 
         # Use the fetch functions to collect all the data
@@ -597,19 +829,21 @@ class HeavyLifting(QgsTask):
         if os.path.isdir(self.PRW.outputLocation) is False:
             os.mkdir(self.PRW.outputLocation)
 
+        shapefile_output_dir = os.path.join(self.PRW.outputLocation, self.PRW.fileName)
+        
         fileNameExt = self.PRW.fileName + '.xlsx'
         # Check if the selected filename exists in the dir
-        output_file_dir_ext = os.path.join(self.PRW.outputLocation, fileNameExt)
-        if os.path.exists(output_file_dir_ext):
+        excel_output = os.path.join(self.PRW.outputLocation, fileNameExt)
+        if os.path.exists(excel_output) or os.path.exists(shapefile_output_dir):
             name, ext = fileNameExt.split('.')
             i = 1
-            while os.path.exists(os.path.join(self.PRW.outputLocation, name + '{}.'.format(i) + ext)):
+            while os.path.exists(os.path.join(self.PRW.outputLocation, name + '{}.'.format(i) + ext)) or os.path.exists(os.path.join(self.PRW.outputLocation, name + '{}.'.format(i))):
                 i += 1
-            output_file_dir_ext = os.path.join(self.PRW.outputLocation, name + '{}.'.format(i) + ext)
-            output_file_dir = os.path.join(self.PRW.outputLocation, name + '{}.'.format(i))
+            excel_output = os.path.join(self.PRW.outputLocation, name + '{}.'.format(i) + ext)
+            shapefile_output_dir = os.path.join(self.PRW.outputLocation, name + '{}.'.format(i))
 
         # Writing the data to excel sheets
-        with pd.ExcelWriter(output_file_dir_ext, engine='xlsxwriter', mode='w',
+        with pd.ExcelWriter(excel_output, engine='xlsxwriter', mode='w',
                             datetime_format='dd-mm-yyyy',
                             date_format='dd-mm-yyyy') as writer:
             workbook = writer.book
@@ -638,13 +872,12 @@ class HeavyLifting(QgsTask):
 
             self.setProgress(60)
 
-            # Adding the meetgegevens per peilbuis to the same Excelsheet
+            # Adding all the meetgegevens to one sheet and chart
             chart = workbook.add_chart(
                 {'type': 'scatter', 'subtype': 'straight'})
             prw_meetgeg_sheetname = 'PRW_Peilbuis_Meetgegevens'
-            min_date = min(df_meetgegevens['DATUM_METING'])
-            max_date = max(df_meetgegevens['DATUM_METING'])
             unique_peilbuizen = df_meetgegevens['PEILBUIS'].unique()
+            
             prog_step = 20 / len(unique_peilbuizen)
             prog = 60
             col = 0
@@ -681,8 +914,10 @@ class HeavyLifting(QgsTask):
             self.setProgress(80)
             if self.isCanceled():
                 return False
-
+            
             # Meetgegevens Chart formatting
+            min_date = min(df_meetgegevens['DATUM_METING'])
+            max_date = max(df_meetgegevens['DATUM_METING'])
             minGWS = float(min(df_meetgegevens['MEETWAARDE']))
             chart.set_x_axis({
                 'name':             'Datum ',
@@ -726,25 +961,34 @@ class HeavyLifting(QgsTask):
             df_pbs = df_pbs.set_index('PEILBUIS')
             df_pbStats = df_pbStats.sort_values(by='PEILBUIS')
 
+            # Add peilbuizen and peilbuizen statistics together
             df_pbs_shp = pd.concat([df_pbs, df_pbStats.loc[:, 'Maximaal gemeten':'Minimaal gemeten']], axis=1)
-            print(df_pbs_shp)
+            # Convert datetime variables to strings for GeoPandas
             for i in df_pbs_shp:
                 if df_pbs_shp[i].dtypes == 'datetime64[ns]':
                     df_pbs_shp[i] = df_pbs_shp.astype(str)
+            # Add geometry
             df_pbs_shp['geometry'] = [Point(xy) for xy in zip(df_pbs_shp.X_COORDINAAT, df_pbs_shp.Y_COORDINAAT)]
+            # Create GeoDataFrame and write it away
             gdf = gpd.GeoDataFrame(df_pbs_shp)
             gdf.crs = {'init': 'epsg:28992'}
-            gdf.to_file(output_file_dir)
+            gdf.to_file(shapefile_output_dir)
 
         # Start the excel file
-        os.startfile(output_file_dir_ext)
+        os.startfile(excel_output)
 
         self.setProgress(100)
         return True
 
     def finished(self, result):
-        """ This function is called automatically when the task is completed and is 
-        called from the main thread so it is safe to interact with the GUI etc here"""
+        """
+        This function is called automatically when the task is completed and is 
+        called from the main thread so it is safe to interact with the GUI etc here
+        
+        Parameters
+        ----------
+        result : bool
+        """
         if result:
             self.iface.messageBar().pushMessage('Task "{name}" completed '
                                                 'in {duration} seconds'.format(
@@ -768,6 +1012,7 @@ class HeavyLifting(QgsTask):
                 raise self.exception
 
     def cancel(self):
+        """Method called when QgsTask is canceled."""
         self.iface.messageBar().pushMessage(
             'Task "{name}" canceled by the user.'.format(
                 name=self.description()),
