@@ -966,7 +966,7 @@ class HeavyLifting(QgsTask):
             # Convert datetime variables to strings for GeoPandas
             for i in df_pbs_shp:
                 if df_pbs_shp[i].dtypes == 'datetime64[ns]':
-                    df_pbs_shp[i] = df_pbs_shp.astype(str)
+                    df_pbs_shp[i] = df_pbs_shp[i].astype(str)
             # Add geometry
             df_pbs_shp['geometry'] = [Point(xy) for xy in zip(df_pbs_shp.X_COORDINAAT, df_pbs_shp.Y_COORDINAAT)]
             # Create GeoDataFrame and write it away
