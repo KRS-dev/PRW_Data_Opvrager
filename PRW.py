@@ -916,9 +916,9 @@ class HeavyLifting(QgsTask):
                 return False
             
             # Meetgegevens Chart formatting
-            min_date = np.nanmin(df_meetgegevens['DATUM_METING']) - 1
-            max_date = np.nanmax(df_meetgegevens['DATUM_METING']) + 1
-            minGWS = float(np.nanmin(df_meetgegevens['MEETWAARDE']))
+            min_date = df_meetgegevens['DATUM_METING'].min(skipna=True) - 1
+            max_date = df_meetgegevens['DATUM_METING'].max(skipna=True) + 1
+            minGWS = float(df_meetgegevens['MEETWAARDE'].min(skipna=True))
             chart.set_x_axis({
                 'name':             'Datum ',
                 'name_font':        {'size': 14, 'bold': True},
