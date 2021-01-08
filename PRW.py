@@ -916,8 +916,8 @@ class HeavyLifting(QgsTask):
                 return False
             
             # Meetgegevens Chart formatting
-            min_date = df_meetgegevens['DATUM_METING'].min(skipna=True) - 1
-            max_date = df_meetgegevens['DATUM_METING'].max(skipna=True) + 1
+            min_date = df_meetgegevens['DATUM_METING'].min(skipna=True)
+            max_date = df_meetgegevens['DATUM_METING'].max(skipna=True)
             minGWS = float(df_meetgegevens['MEETWAARDE'].min(skipna=True))
             chart.set_x_axis({
                 'name':             'Datum ',
