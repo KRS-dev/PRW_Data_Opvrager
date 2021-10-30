@@ -593,7 +593,7 @@ class PRW_Data_Opvrager:
                     val = list(pbs_ids)
 
                     # Bindvalues are used in the queries to prevent SQL-injection.
-                    # Queries with more than 1000 bindvalues raise an error in cx_Oracle, robustness is built in by creating chunks
+                    # Queries with more than 1000 bindvalues raise an error in cx_Oracle, robustness is built in doing it in chunks
                     # More info about bindvalues can be found in the cx_Oracle docs.
                     chunks = [val[x: x + 990] for x in range(0, len(val), 990)]
                     df_list = []
